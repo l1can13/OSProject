@@ -1,50 +1,44 @@
 package com.example.osproject;
 
+import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
+
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.DialogInterface;
-import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
-import static androidx.core.app.NotificationCompat.PRIORITY_LOW;
-
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.LayoutInflater;
+import android.os.Environment;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.firestore.auth.User;
 import com.google.gson.Gson;
 
 import org.apache.commons.net.ftp.FTPClient;
@@ -54,16 +48,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Home extends AppCompatActivity {
 
@@ -78,13 +64,94 @@ public class Home extends AppCompatActivity {
     private ToggleButton TglBtnFav;
     private TextView TestText;
     private NotificationManager notificationManager;
-
     private SharedPreferences fb_SharedPreference_settings;
+    private List<FileCustom> fileList = new LinkedList<>();
 
     private FirebaseAuth fbAuth;
 
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";
+
+    public String cyr2lat(char ch) {
+        switch (ch) {
+            case 'а':
+                return "a";
+            case 'б':
+                return "b";
+            case 'в':
+                return "v";
+            case 'г':
+                return "g";
+            case 'д':
+                return "d";
+            case 'е':
+                return "e";
+            case 'ё':
+                return "je";
+            case 'ж':
+                return "zh";
+            case 'з':
+                return "z";
+            case 'и':
+                return "i";
+            case 'й':
+                return "y";
+            case 'к':
+                return "k";
+            case 'л':
+                return "l";
+            case 'м':
+                return "m";
+            case 'н':
+                return "n";
+            case 'о':
+                return "o";
+            case 'п':
+                return "p";
+            case 'р':
+                return "r";
+            case 'с':
+                return "s";
+            case 'т':
+                return "t";
+            case 'у':
+                return "u";
+            case 'ф':
+                return "f";
+            case 'х':
+                return "h";
+            case 'ц':
+                return "c";
+            case 'ч':
+                return "ch";
+            case 'ш':
+                return "sh";
+            case 'щ':
+                return "sch";
+            case 'ъ':
+                return "";
+            case 'ы':
+                return "i";
+            case 'ь':
+                return "";
+            case 'э':
+                return "e";
+            case 'ю':
+                return "u";
+            case 'я':
+                return "ia";
+            default:
+                return String.valueOf(ch);
+        }
+    }
+
+    public String cyr2lat(String s) {
+        StringBuilder sb = new StringBuilder(s.length() * 2);
+        for (char c : s.toCharArray()) {
+            sb.append(cyr2lat(c));
+        }
+        return sb.toString();
+    }
 
     public void showFileChooser() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -101,7 +168,8 @@ public class Home extends AppCompatActivity {
 
     public void upload(Uri uri) throws FileNotFoundException {
         FTPClient fClient = new FTPClient();
-        String fs = new File(uri.getPath()).getName();
+        fClient.setControlEncoding("Windows-1251");
+        String fs = cyr2lat(new FileCustom(uri).getFileName());
         FileInputStream fInput = new FileInputStream(getContentResolver().openFileDescriptor(uri, "r").getFileDescriptor());
         try {
             fClient.connect("backup-storage5.hostiman.ru");
@@ -123,6 +191,9 @@ public class Home extends AppCompatActivity {
 
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
+            FileCustom file = new FileCustom(uri);
+            fileList.add(file);
+
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -148,7 +219,7 @@ public class Home extends AppCompatActivity {
 
         fb_SharedPreference_settings = getPreferences(MODE_PRIVATE);
         fbAuth = FirebaseAuth.getInstance();
-        if(fb_SharedPreference_settings.contains("fbAuth")){
+        if (fb_SharedPreference_settings.contains("fbAuth")) {
             Gson gson = new Gson();
             String json = fb_SharedPreference_settings.getString("fbAuth", "");
             fbAuth = gson.fromJson(json, FirebaseAuth.class);
@@ -156,9 +227,9 @@ public class Home extends AppCompatActivity {
 
         FirebaseUser fbUser = fbAuth.getCurrentUser();
 
-        if(fbUser == null){
-            startActivity(new Intent(getApplicationContext(),Registration.class));
-        }else{
+        if (fbUser == null) {
+            startActivity(new Intent(getApplicationContext(), Registration.class));
+        } else {
             setContentView(R.layout.activity_home);
             sideMenu = findViewById(R.id.navigationView);
             menuButton = findViewById(R.id.menu);
@@ -225,14 +296,10 @@ public class Home extends AppCompatActivity {
                             Dialog dialog;
 
                             final String[] items = {" Изменение общих файлов", " Обновления приложения", " Приглашение в команду"};
-
-
                             final ArrayList itemsSelected = new ArrayList();
 
                             AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
-
                             builder.setTitle("Уведомления : ");
-
                             builder.setMultiChoiceItems(items, null,
                                     new DialogInterface.OnMultiChoiceClickListener() {
 
@@ -253,21 +320,18 @@ public class Home extends AppCompatActivity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int id) {
 
-
                                         }
                                     })
                                     .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int id) {
 
-
                                         }
                                     });
 
                             dialog = builder.create();
-
                             dialog.show();
-//                        Toast.makeText(getApplicationContext(), "notification", Toast.LENGTH_SHORT).show();
+
                             Intent intent = new Intent(getApplicationContext(), Home.class);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -289,6 +353,7 @@ public class Home extends AppCompatActivity {
                     }
                     return false;
                 }
+
                 public void createChannelIfNeeded(NotificationManager manager) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_ID, NotificationManager.IMPORTANCE_DEFAULT);
@@ -296,6 +361,7 @@ public class Home extends AppCompatActivity {
                     }
                 }
             });
+
             bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -323,8 +389,6 @@ public class Home extends AppCompatActivity {
                 }
             });
         }
-
-
 
     }
 }
