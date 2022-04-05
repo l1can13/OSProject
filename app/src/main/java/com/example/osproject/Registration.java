@@ -1,0 +1,129 @@
+package com.example.osproject;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
+
+
+public class Registration extends AppCompatActivity {
+
+    private TextView SignIn;
+    private Button register;
+    private TextView email;
+    private TextView username;
+    private TextView password;
+    private TextView phone;
+
+    private FirebaseDatabase fbDatabase;
+    private DatabaseReference DatabaseInfo;
+
+    @Expose(serialize = false)
+    private FirebaseAuth fbAuth;
+
+    SharedPreferences sender;
+    //private FirebaseDatabase fbDatabase;
+    //private DatabaseReference DatabaseInfo;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_registration);
+
+        fbDatabase = FirebaseDatabase.getInstance();
+        DatabaseInfo = fbDatabase.getReference("Users");
+
+        sender = getPreferences(MODE_PRIVATE);
+
+        fbAuth = FirebaseAuth.getInstance();
+
+        username = findViewById(R.id.username);
+        password = findViewById(R.id.password);
+        email = findViewById(R.id.email);
+        phone = findViewById(R.id.phoneNumber);
+
+        register = findViewById(R.id.loginButton);
+
+        SignIn = findViewById(R.id.alreadyHaveAccount);
+        SignIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getApplicationContext(),Login.class));
+            }
+        });
+        register.setOnClickListener(new View.OnClickListener() {
+            @Override
+            //Не работают Тосты
+            public void onClick(View view) {
+                if(username.getText().toString().isEmpty()){
+                    Toast.makeText(getApplicationContext(), "Введите имя пользователя!", Toast.LENGTH_SHORT).show();
+                    System.out.println("USERNAMEERROR");
+                    return;
+                }if(password.getText().toString().length() < 10){
+                    Toast.makeText(getApplicationContext(), "Введите корректный пароль!\nЕго длина должна быть более 10 символов.", Toast.LENGTH_SHORT).show();
+                    password.setText("");
+                    System.out.println("PASSWORDERROR");
+                    return;
+                }
+                if(email.getText().toString().isEmpty() || !isValidEmail(email.getText().toString())){
+                    Toast.makeText(getApplicationContext(),"Некорректный email!",Toast.LENGTH_SHORT);
+                    email.setText("");
+                    System.out.println("EMAILERROR");
+                    return;
+                }if(phone.getText().toString().isEmpty() || !isValidPhone(phone.getText().toString())){
+                    Toast.makeText(getApplicationContext(), "Некорректный номер телефона!", Toast.LENGTH_SHORT).show();
+                    phone.setText("");
+                    System.out.println("PHONEERROR");
+                    return;
+                }
+                fbAuth.createUserWithEmailAndPassword(email.getText().toString(),password.getText().toString())
+                .addOnCompleteListener(Registration.this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(Registration.this, "Authentication failed." + task.getException(),
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+
+                            SharedPreferences.Editor prefsEditor = sender.edit();
+
+                            String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
+                            prefsEditor.putString("fbAuth", json);
+                            prefsEditor.apply();
+                            startActivity(new Intent(Registration.this, Home.class));
+                            finish();
+                        }
+                    }
+                });
+
+
+            }
+        });
+    }
+
+    private final static boolean isValidEmail(CharSequence target) {
+        return !TextUtils.isEmpty(target) && android.util.Patterns.EMAIL_ADDRESS.matcher(target).matches();
+    }
+
+    public static boolean isValidPhone(String phone){
+        return phone.matches("^((\\+7|7|8)+([0-9]){10})$");
+    }
+
+}

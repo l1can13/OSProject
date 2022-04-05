@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "941795891483",
+    "project_id": "galvanic-axle-343014",
+    "storage_bucket": "galvanic-axle-343014.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941795891483:android:adcef73865911ea906dbbe",
+        "android_client_info": {
+          "package_name": "com.example.osproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "941795891483-vb8u1i85ul5sumpvmbm57ibgr5ehnev3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.osproject",
+            "certificate_hash": "8c129a8f1b060c6cad2bb21d401c08501e13417f"
+          }
+        },
+        {
+          "client_id": "941795891483-cpt7qiaebd9nna3i2rk4mpfjjp2ui0n7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApQwuz8TKJ6rZ9rqnBOt4vLOLCGAfvntI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "941795891483-cpt7qiaebd9nna3i2rk4mpfjjp2ui0n7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
