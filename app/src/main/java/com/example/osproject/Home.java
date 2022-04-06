@@ -72,87 +72,6 @@ public class Home extends AppCompatActivity {
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";
 
-    public String cyr2lat(char ch) {
-        switch (ch) {
-            case 'а':
-                return "a";
-            case 'б':
-                return "b";
-            case 'в':
-                return "v";
-            case 'г':
-                return "g";
-            case 'д':
-                return "d";
-            case 'е':
-                return "e";
-            case 'ё':
-                return "je";
-            case 'ж':
-                return "zh";
-            case 'з':
-                return "z";
-            case 'и':
-                return "i";
-            case 'й':
-                return "y";
-            case 'к':
-                return "k";
-            case 'л':
-                return "l";
-            case 'м':
-                return "m";
-            case 'н':
-                return "n";
-            case 'о':
-                return "o";
-            case 'п':
-                return "p";
-            case 'р':
-                return "r";
-            case 'с':
-                return "s";
-            case 'т':
-                return "t";
-            case 'у':
-                return "u";
-            case 'ф':
-                return "f";
-            case 'х':
-                return "h";
-            case 'ц':
-                return "c";
-            case 'ч':
-                return "ch";
-            case 'ш':
-                return "sh";
-            case 'щ':
-                return "sch";
-            case 'ъ':
-                return "";
-            case 'ы':
-                return "i";
-            case 'ь':
-                return "";
-            case 'э':
-                return "e";
-            case 'ю':
-                return "u";
-            case 'я':
-                return "ia";
-            default:
-                return String.valueOf(ch);
-        }
-    }
-
-    public String cyr2lat(String s) {
-        StringBuilder sb = new StringBuilder(s.length() * 2);
-        for (char c : s.toCharArray()) {
-            sb.append(cyr2lat(c));
-        }
-        return sb.toString();
-    }
-
     public void showFileChooser() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
@@ -166,41 +85,21 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    public void upload(Uri uri) throws FileNotFoundException {
-        FTPClient fClient = new FTPClient();
-        fClient.setControlEncoding("Windows-1251");
-        String fs = cyr2lat(new FileCustom(uri).getFileName());
-        FileInputStream fInput = new FileInputStream(getContentResolver().openFileDescriptor(uri, "r").getFileDescriptor());
-        try {
-            fClient.connect("backup-storage5.hostiman.ru");
-            fClient.enterLocalPassiveMode();
-            fClient.login("s222776", "Tmmm8eTKwZ9fHUqh");
-            fClient.storeFile(fs, fInput);
-            fClient.logout();
-            fClient.disconnect();
-            System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
-        } catch (IOException ex) {
-            System.out.println("ОШИБКА В UPLOAD!");
-            System.err.println(ex);
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent result) {
         super.onActivityResult(requestCode, resultCode, result);
 
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
-            FileCustom file = new FileCustom(uri);
-            System.out.println("тест");
+            FileCustom file = new FileCustom(uri, getApplicationContext());
             fileList.add(file);
 
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        upload(uri);
-                    } catch (FileNotFoundException e) {
+                        file.upload();
+                    } catch (IOException e) {
                         System.out.println("ОШИБКА В ACTIVITY RESULT!");
                         e.printStackTrace();
                     }
