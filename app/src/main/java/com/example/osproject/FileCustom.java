@@ -36,7 +36,7 @@ public class FileCustom {
         this.uploadDate = Calendar.getInstance();
     }
 
-    public double getFileSize() {
+    private double getFileSize() {
         Cursor returnCursor =
                 context.getContentResolver().query(this.uri, null, null, null, null);
 
@@ -46,7 +46,7 @@ public class FileCustom {
         return ((double)returnCursor.getLong(size) / 1024) / 1024;
     }
 
-    public String getFileName() {
+    private String getFileName() {
         Cursor returnCursor =
                 context.getContentResolver().query(this.uri, null, null, null, null);
         assert returnCursor != null;
@@ -180,7 +180,7 @@ public class FileCustom {
         return this.uri;
     }
 
-    public String getFilename() {
+    public String getName() {
         return this.filename;
     }
 

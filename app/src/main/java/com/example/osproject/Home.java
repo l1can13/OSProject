@@ -3,25 +3,18 @@ package com.example.osproject;
 import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
@@ -30,6 +23,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -42,19 +36,17 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.net.ftp.FTPClient;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Home extends AppCompatActivity {
 
+    /* Элементы из xml файлов */
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
     private ImageButton menuButton;
@@ -66,11 +58,18 @@ public class Home extends AppCompatActivity {
     private ToggleButton TglBtnFav;
     private TextView TestText;
     private NotificationManager notificationManager;
-    private SharedPreferences fb_SharedPreference_settings;
-    private List<FileCustom> fileList = new LinkedList<>();
 
+    /* Shared Preferences */
+    private SharedPreferences fb_SharedPreference_settings;
+    private SharedPreferences sPref;
+    private SharedPreferences.Editor ed;
+    private final String key = "keyFiles";
+    private List<String> filenamesList = new LinkedList<>();
+
+    /* FireBase */
     private FirebaseAuth fbAuth;
 
+    /* Уведомления */
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";
 
@@ -87,6 +86,32 @@ public class Home extends AppCompatActivity {
         }
     }
 
+    private void saveList(List<String> list) throws IOException {
+        Gson gson = new Gson();
+        String json = gson.toJson(list);
+        ed.putString(key, json);
+        ed.commit();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private List<String> loadList() throws IOException, ClassNotFoundException {
+        List<String> arrayItems = new ArrayList<>();
+
+        try {
+            String serializedObject = sPref.getString(key, null);
+            if (serializedObject != null) {
+                Gson gson = new Gson();
+                Type type = new TypeToken<List<String>>() {
+                }.getType();
+                arrayItems = gson.fromJson(serializedObject, type);
+            }
+        } catch (Exception e) {
+            System.out.println("ПУСТО");
+        }
+
+        return arrayItems;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent result) {
         super.onActivityResult(requestCode, resultCode, result);
@@ -94,7 +119,7 @@ public class Home extends AppCompatActivity {
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
             FileCustom file = new FileCustom(uri, getApplicationContext());
-            fileList.add(file);
+            filenamesList.add(file.getName());
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -119,7 +144,7 @@ public class Home extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+        ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         fb_SharedPreference_settings = getPreferences(MODE_PRIVATE);
         fbAuth = FirebaseAuth.getInstance();
         if (fb_SharedPreference_settings.contains("fbAuth")) {
@@ -133,6 +158,14 @@ public class Home extends AppCompatActivity {
         if (fbUser == null) {
             startActivity(new Intent(getApplicationContext(), Registration.class));
         } else {
+            sPref = getSharedPreferences(key, Context.MODE_PRIVATE);
+            ed = sPref.edit();
+            try {
+                filenamesList = loadList();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
             setContentView(R.layout.activity_home);
             sideMenu = findViewById(R.id.navigationView);
             menuButton = findViewById(R.id.menu);
@@ -143,7 +176,6 @@ public class Home extends AppCompatActivity {
             TglBtnFav = (ToggleButton) findViewById(R.id.buttonFav);
             TestText = (TextView) findViewById(R.id.textViewtest);
             notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-
 
             sideMenuHeader = sideMenu.getHeaderView(0);
             backButton = sideMenuHeader.findViewById(R.id.backButton);
@@ -205,13 +237,10 @@ public class Home extends AppCompatActivity {
                             builder.setTitle("Уведомления : ");
                             builder.setMultiChoiceItems(items, null,
                                     new DialogInterface.OnMultiChoiceClickListener() {
-
-
                                         @Override
                                         public void onClick(DialogInterface dialog, int selectedItemId,
                                                             boolean isSelected) {
                                             if (isSelected) {
-
                                                 itemsSelected.add(selectedItemId);
                                             } else if (itemsSelected.contains(selectedItemId)) {
 
@@ -270,20 +299,40 @@ public class Home extends AppCompatActivity {
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.photoItem:
+                            try {
+                                saveList(filenamesList);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             startActivity(new Intent(getApplicationContext(), Photo.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.filesItem:
+                            try {
+                                saveList(filenamesList);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             startActivity(new Intent(getApplicationContext(), Files.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.homeItem:
                             return true;
                         case R.id.generalItem:
+                            try {
+                                saveList(filenamesList);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             startActivity(new Intent(getApplicationContext(), General.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.accountItem:
+                            try {
+                                saveList(filenamesList);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             startActivity(new Intent(getApplicationContext(), Account.class));
                             overridePendingTransition(0, 0);
                             return true;
