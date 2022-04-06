@@ -192,6 +192,7 @@ public class Home extends AppCompatActivity {
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
             FileCustom file = new FileCustom(uri);
+            System.out.println("тест");
             fileList.add(file);
 
             Thread thread = new Thread(new Runnable() {
