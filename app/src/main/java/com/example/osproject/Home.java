@@ -29,8 +29,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -47,17 +50,16 @@ import java.util.List;
 public class Home extends AppCompatActivity {
 
     /* Элементы из xml файлов */
+    private RecyclerViewAdapter recyclerViewAdapter;
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
     private ImageButton menuButton;
     private ImageButton backButton;
-    private ImageButton addButton;
+    private FloatingActionButton addButton;
     private NavigationView sideMenu;
     private View sideMenuHeader;
-    private ToggleButton TglBtnLast;
-    private ToggleButton TglBtnFav;
-    private TextView TestText;
     private NotificationManager notificationManager;
+    private RecyclerView recyclerView;
 
     /* Shared Preferences */
     private SharedPreferences fb_SharedPreference_settings;
@@ -120,6 +122,8 @@ public class Home extends AppCompatActivity {
             Uri uri = result.getData();
             FileCustom file = new FileCustom(uri, getApplicationContext());
             filenamesList.add(file.getName());
+            recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
+            recyclerView.scrollToPosition(filenamesList.size() - 1);
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -139,6 +143,15 @@ public class Home extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            saveList(filenamesList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,7 +169,7 @@ public class Home extends AppCompatActivity {
         FirebaseUser fbUser = fbAuth.getCurrentUser();
 
         if (fbUser == null) {
-            startActivity(new Intent(getApplicationContext(), Registration.class));
+            startActivity(new Intent(this, Registration.class));
         } else {
             sPref = getSharedPreferences(key, Context.MODE_PRIVATE);
             ed = sPref.edit();
@@ -168,36 +181,20 @@ public class Home extends AppCompatActivity {
 
             setContentView(R.layout.activity_home);
             sideMenu = findViewById(R.id.navigationView);
+            addButton = findViewById(R.id.addButton);
             menuButton = findViewById(R.id.menu);
             drawerLayout = findViewById(R.id.drawerLayout);
             bottomNavigationView = findViewById(R.id.bottomMenu);
-            addButton = findViewById(R.id.addButton);
-            TglBtnLast = (ToggleButton) findViewById(R.id.buttonLast);
-            TglBtnFav = (ToggleButton) findViewById(R.id.buttonFav);
-            TestText = (TextView) findViewById(R.id.textViewtest);
+            recyclerView = findViewById(R.id.recyclerView);
             notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
             sideMenuHeader = sideMenu.getHeaderView(0);
             backButton = sideMenuHeader.findViewById(R.id.backButton);
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+            recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
+            recyclerView.setAdapter(recyclerViewAdapter);
 
             bottomNavigationView.setSelectedItemId(R.id.homeItem);
-
-            TglBtnLast.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    TestText.setTextSize(20);
-                    TglBtnFav.setTextColor(getResources().getColor(R.color.darkGreenTrans));
-                    TglBtnLast.setTextColor(getResources().getColor(R.color.darkGreen));
-                }
-            });
-            TglBtnFav.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    TestText.setTextSize(40);
-                    TglBtnLast.setTextColor(getResources().getColor(R.color.darkGreenTrans));
-                    TglBtnFav.setTextColor(getResources().getColor(R.color.darkGreen));
-                }
-            });
 
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override

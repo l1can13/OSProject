@@ -35,4 +35,8 @@
     <string name="Test">test</string>
     <string name="favorites">Избранное</string>
     <string name="last">Последнее</string>
+    <string name="fileExample">Название файла</string>
+    <string name="sizeExample">5.8МБ</string>
+    <string name="fileIcon">fileIcon</string>
+    <string name="addFileButton">addFileButton</string>
 </resources>
