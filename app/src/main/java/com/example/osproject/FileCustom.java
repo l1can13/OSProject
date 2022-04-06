@@ -1,21 +1,17 @@
 package com.example.osproject;
 
-import android.annotation.SuppressLint;
-import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
 
@@ -23,19 +19,42 @@ public class FileCustom {
 
     private Context context;
     private String filename;
-    private String path;
-    private File file;
     private double size;
     private Calendar uploadDate;
     private Uri uri;
 
     public FileCustom(Uri uri, Context context) {
         this.context = context;
-        this.filename = new File(uri.getPath()).getName();
         this.uri = uri;
-        this.path = uri.getPath();
-        this.size = new File(uri.getPath()).length();
+        this.filename = getFileName();
+        this.size = getFileSize();
         this.uploadDate = Calendar.getInstance();
+    }
+
+    public FileCustom(String filename) {
+        this.filename = filename;
+        this.uploadDate = Calendar.getInstance();
+    }
+
+    public double getFileSize() {
+        Cursor returnCursor =
+                context.getContentResolver().query(this.uri, null, null, null, null);
+
+        int size = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+        returnCursor.moveToFirst();
+
+        return ((double)returnCursor.getLong(size) / 1024) / 1024;
+    }
+
+    public String getFileName() {
+        Cursor returnCursor =
+                context.getContentResolver().query(this.uri, null, null, null, null);
+        assert returnCursor != null;
+        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+        returnCursor.moveToFirst();
+        String name = returnCursor.getString(nameIndex);
+        returnCursor.close();
+        return name;
     }
 
     public String cyr2lat(char ch) {
@@ -133,9 +152,27 @@ public class FileCustom {
             fClient.disconnect();
             System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
         } catch (IOException ex) {
+            System.out.println("ОШИБКА ПРИ ВЫГРУЗКЕ ФАЙЛА С СЕРВЕРА!");
+        }
+    }
 
-            System.out.println("ОШИБКА В UPLOAD!");
-            System.err.println(ex);
+    public void downloadFile() throws FileNotFoundException {
+        FTPClient client = new FTPClient();
+        FileOutputStream fos;
+        String mPath;
+        mPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + this.filename;
+
+        fos = new FileOutputStream(mPath);
+        try {
+            client.connect("backup-storage5.hostiman.ru");
+            client.enterLocalPassiveMode();
+            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+            client.retrieveFile("/" + this.filename, fos);
+            client.logout();
+            client.disconnect();
+            System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+        } catch (IOException e) {
+            System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!");
         }
     }
 
@@ -147,10 +184,6 @@ public class FileCustom {
         return this.filename;
     }
 
-    public String getPath() {
-        return this.path;
-    }
-
     public double getSize() {
         return this.size;
     }
@@ -159,7 +192,4 @@ public class FileCustom {
         return this.uploadDate;
     }
 
-    public File getFile() {
-        return file;
-    }
 }

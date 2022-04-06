@@ -2,6 +2,7 @@ package com.example.osproject;
 
 import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -30,6 +31,7 @@ import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -117,6 +119,7 @@ public class Home extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
         fb_SharedPreference_settings = getPreferences(MODE_PRIVATE);
         fbAuth = FirebaseAuth.getInstance();
         if (fb_SharedPreference_settings.contains("fbAuth")) {
