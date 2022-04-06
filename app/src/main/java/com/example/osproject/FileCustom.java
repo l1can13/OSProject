@@ -1,12 +1,5 @@
 package com.example.osproject;
 
-import static com.example.osproject.FileUtils.getDataColumn;
-import static com.example.osproject.FileUtils.isDownloadsDocument;
-import static com.example.osproject.FileUtils.isExternalStorageDocument;
-import static com.example.osproject.FileUtils.isGoogleDrive;
-import static com.example.osproject.FileUtils.isMediaDocument;
-import static com.example.osproject.FileUtils.saveFileIntoExternalStorageByUri;
-
 import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.Context;
@@ -29,9 +22,9 @@ import java.util.Calendar;
 public class FileCustom {
 
     private Context context;
-    private File file;
     private String filename;
     private String path;
+    private File file;
     private double size;
     private Calendar uploadDate;
     private Uri uri;
@@ -41,6 +34,7 @@ public class FileCustom {
         this.filename = new File(uri.getPath()).getName();
         this.uri = uri;
         this.path = uri.getPath();
+        this.size = new File(uri.getPath()).length();
         this.uploadDate = Calendar.getInstance();
     }
 
@@ -128,18 +122,18 @@ public class FileCustom {
     public void upload() throws IOException {
         FTPClient fClient = new FTPClient();
         fClient.setControlEncoding("UTF-8");
-        String fs = cyr2lat(this.filename);
         FileInputStream fInput = new FileInputStream(this.context.getContentResolver().openFileDescriptor(uri, "rw").getFileDescriptor());
         try {
             fClient.connect("backup-storage5.hostiman.ru");
             fClient.enterLocalPassiveMode();
             fClient.login("s222776", "Tmmm8eTKwZ9fHUqh");
             fClient.setFileType(FTP.BINARY_FILE_TYPE);
-            fClient.storeFile(fs, fInput);
+            fClient.storeFile(cyr2lat(this.filename), fInput);
             fClient.logout();
             fClient.disconnect();
             System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
         } catch (IOException ex) {
+
             System.out.println("ОШИБКА В UPLOAD!");
             System.err.println(ex);
         }
