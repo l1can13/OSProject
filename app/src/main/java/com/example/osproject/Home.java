@@ -3,6 +3,7 @@ package com.example.osproject;
 import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.NotificationChannel;
@@ -88,15 +89,19 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    private void saveList(List<String> list) throws IOException {
-        Gson gson = new Gson();
-        String json = gson.toJson(list);
-        ed.putString(key, json);
-        ed.commit();
+    private void saveList(List<String> list) {
+        try {
+            Gson gson = new Gson();
+            String json = gson.toJson(list);
+            ed.putString(key, json);
+            ed.commit();
+        } catch(Exception e) {
+            System.out.println("ОШИБКА ПРИ СОХРАНЕНИИ СПИСКА ИМЕН ФАЙЛОВ!");
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private List<String> loadList() throws IOException, ClassNotFoundException {
+    private List<String> loadList() {
         List<String> arrayItems = new ArrayList<>();
 
         try {
@@ -108,7 +113,7 @@ public class Home extends AppCompatActivity {
                 arrayItems = gson.fromJson(serializedObject, type);
             }
         } catch (Exception e) {
-            System.out.println("ПУСТО");
+            System.out.println("ПУСТО! ОШИБКА ПРИ ЗАГРУЗКЕ СПИСКА ИМЕН ФАЙЛОВ!");
         }
 
         return arrayItems;
@@ -128,12 +133,7 @@ public class Home extends AppCompatActivity {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        file.upload();
-                    } catch (IOException e) {
-                        System.out.println("ОШИБКА В ACTIVITY RESULT!");
-                        e.printStackTrace();
-                    }
+                    file.upload();
                 }
             });
             thread.start();
@@ -146,18 +146,14 @@ public class Home extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        try {
-            saveList(filenamesList);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        saveList(filenamesList);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
         fb_SharedPreference_settings = getPreferences(MODE_PRIVATE);
         fbAuth = FirebaseAuth.getInstance();
         if (fb_SharedPreference_settings.contains("fbAuth")) {
@@ -173,11 +169,7 @@ public class Home extends AppCompatActivity {
         } else {
             sPref = getSharedPreferences(key, Context.MODE_PRIVATE);
             ed = sPref.edit();
-            try {
-                filenamesList = loadList();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+            filenamesList = loadList();
 
             setContentView(R.layout.activity_home);
             sideMenu = findViewById(R.id.navigationView);
@@ -296,40 +288,24 @@ public class Home extends AppCompatActivity {
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.photoItem:
-                            try {
-                                saveList(filenamesList);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Photo.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.filesItem:
-                            try {
-                                saveList(filenamesList);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Files.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.homeItem:
                             return true;
                         case R.id.generalItem:
-                            try {
-                                saveList(filenamesList);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), General.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.accountItem:
-                            try {
-                                saveList(filenamesList);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Account.class));
                             overridePendingTransition(0, 0);
                             return true;

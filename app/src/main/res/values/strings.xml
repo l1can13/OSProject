@@ -39,4 +39,5 @@
     <string name="sizeExample">5.8МБ</string>
     <string name="fileIcon">fileIcon</string>
     <string name="addFileButton">addFileButton</string>
+    <string name="enterEmail">Введите почту, к которой привязан аккаунт:</string>
 </resources>

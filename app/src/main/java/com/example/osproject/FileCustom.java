@@ -1,10 +1,14 @@
 package com.example.osproject;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.OpenableColumns;
+
+import androidx.core.app.ActivityCompat;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -31,7 +35,8 @@ public class FileCustom {
         this.uploadDate = Calendar.getInstance();
     }
 
-    public FileCustom(String filename) {
+    public FileCustom(String filename, Context context) {
+        this.context = context;
         this.filename = filename;
         this.uploadDate = Calendar.getInstance();
     }
@@ -138,11 +143,11 @@ public class FileCustom {
         return sb.toString();
     }
 
-    public void upload() throws IOException {
+    public void upload() {
         FTPClient fClient = new FTPClient();
         fClient.setControlEncoding("UTF-8");
-        FileInputStream fInput = new FileInputStream(this.context.getContentResolver().openFileDescriptor(uri, "rw").getFileDescriptor());
         try {
+            FileInputStream fInput = new FileInputStream(this.context.getContentResolver().openFileDescriptor(this.uri, "rw").getFileDescriptor());
             fClient.connect("backup-storage5.hostiman.ru");
             fClient.enterLocalPassiveMode();
             fClient.login("s222776", "Tmmm8eTKwZ9fHUqh");
@@ -156,14 +161,13 @@ public class FileCustom {
         }
     }
 
-    public void downloadFile() throws FileNotFoundException {
+    public void downloadFile() {
         FTPClient client = new FTPClient();
         FileOutputStream fos;
         String mPath;
         mPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + this.filename;
-
-        fos = new FileOutputStream(mPath);
         try {
+            fos = new FileOutputStream(mPath);
             client.connect("backup-storage5.hostiman.ru");
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
