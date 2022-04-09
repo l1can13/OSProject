@@ -79,7 +79,7 @@ public class Registration extends AppCompatActivity {
                     return;
                 }
                 if(email.getText().toString().isEmpty() || !isValidEmail(email.getText().toString())){
-                    Toast.makeText(Registration.this,"Некорректный email!",Toast.LENGTH_SHORT);
+                    Toast.makeText(Registration.this,"Некорректный email!",Toast.LENGTH_SHORT).show();
                     email.setText("");
                     return;
                 }if(phone.getText().toString().isEmpty() || !isValidPhone(phone.getText().toString())){
