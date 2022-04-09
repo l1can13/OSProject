@@ -2,6 +2,7 @@ package com.example.osproject;
 
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,20 +28,27 @@ public class FeedbackDialog extends AppCompatActivity {
         ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try  {
-                            MailSender.sendEmail(email.getText().toString(), describe.getText().toString());
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                if(!email.getText().toString().isEmpty() && isValidEmail(email.getText().toString())) {
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                MailSender.sendEmail(email.getText().toString(), describe.getText().toString());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
-                    }
-                });
-                thread.start();
-                Toast.makeText(getApplicationContext(), "Сообщение отправлено, спасибо за отзыв!", Toast.LENGTH_SHORT).show();
-                thread.interrupt();
-                finish();
+                    });
+                    thread.start();
+                    Toast.makeText(getApplicationContext(), "Сообщение отправлено, спасибо за отзыв!", Toast.LENGTH_SHORT).show();
+                    thread.interrupt();
+                    finish();
+                }
+                else{
+                    Toast.makeText(FeedbackDialog.this, "Неправильный адресс почты!", Toast.LENGTH_SHORT).show();
+                    email.setText("");
+                }
+
             }
         });
 
@@ -58,4 +66,9 @@ public class FeedbackDialog extends AppCompatActivity {
             }
         });
     }
+
+    private final static boolean isValidEmail(CharSequence target) {
+        return !TextUtils.isEmpty(target) && android.util.Patterns.EMAIL_ADDRESS.matcher(target).matches();
+    }
+
 }

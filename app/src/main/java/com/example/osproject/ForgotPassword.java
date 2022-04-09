@@ -1,12 +1,17 @@
 package com.example.osproject;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class ForgotPassword extends AppCompatActivity {
 
@@ -14,10 +19,14 @@ public class ForgotPassword extends AppCompatActivity {
     private EditText emailEnter;
     private Button ok, cancel;
 
+    private FirebaseAuth fbAuth;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
+
+        fbAuth = FirebaseAuth.getInstance();
 
         backButton = findViewById(R.id.backButton);
         emailEnter = findViewById(R.id.email);
@@ -34,7 +43,14 @@ public class ForgotPassword extends AppCompatActivity {
         ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Что-то полезное
+                fbAuth.sendPasswordResetEmail(emailEnter.getText().toString()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        Toast.makeText(ForgotPassword.this, "Письмо отправленно!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(ForgotPassword.this, Login.class));
+                        finish();
+                    }
+                });
             }
         });
 

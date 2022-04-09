@@ -1,14 +1,13 @@
 package com.example.osproject;
 
 public class FireBaseUser {
-    private String username, email, password, phoneNumber;
+    private String username, email, phoneNumber;
 
     public FireBaseUser(){}
 
-    public FireBaseUser(String name,String mail, String code, String phone){
+    public FireBaseUser(String name,String mail, String phone){
         username = name;
         email = mail;
-        password = code;
         phoneNumber = phone;
     }
 
@@ -26,14 +25,6 @@ public class FireBaseUser {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getPhoneNumber() {
