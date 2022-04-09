@@ -71,24 +71,20 @@ public class Registration extends AppCompatActivity {
             //Не работают Тосты
             public void onClick(View view) {
                 if(username.getText().toString().isEmpty()){
-                    Toast.makeText(getApplicationContext(), "Введите имя пользователя!", Toast.LENGTH_SHORT).show();
-                    System.out.println("USERNAMEERROR");
+                    Toast.makeText(Registration.this, "Введите имя пользователя!", Toast.LENGTH_SHORT).show();
                     return;
                 }if(password.getText().toString().length() < 10){
-                    Toast.makeText(getApplicationContext(), "Введите корректный пароль!\nЕго длина должна быть более 10 символов.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Registration.this, "Введите корректный пароль!\nЕго длина должна быть более 10 символов.", Toast.LENGTH_SHORT).show();
                     password.setText("");
-                    System.out.println("PASSWORDERROR");
                     return;
                 }
                 if(email.getText().toString().isEmpty() || !isValidEmail(email.getText().toString())){
-                    Toast.makeText(getApplicationContext(),"Некорректный email!",Toast.LENGTH_SHORT);
+                    Toast.makeText(Registration.this,"Некорректный email!",Toast.LENGTH_SHORT);
                     email.setText("");
-                    System.out.println("EMAILERROR");
                     return;
                 }if(phone.getText().toString().isEmpty() || !isValidPhone(phone.getText().toString())){
-                    Toast.makeText(getApplicationContext(), "Некорректный номер телефона!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Registration.this, "Некорректный номер телефона!", Toast.LENGTH_SHORT).show();
                     phone.setText("");
-                    System.out.println("PHONEERROR");
                     return;
                 }
                 fbAuth.createUserWithEmailAndPassword(email.getText().toString(),password.getText().toString())
