@@ -124,7 +124,12 @@ public class Registration extends AppCompatActivity {
     }
 
     public static boolean isValidPhone(String phone){
-        return phone.matches("^((\\+7|7|8)+([0-9]){10})$");
+
+        return (phone.matches("^((\\+7|7|8)+([0-9]){10})$") || //russian number
+                phone.matches("^((\\+?380)([0-9]{9}))$") || //ukranian number
+                phone.matches("^(07[\\d]{8,12}|447[\\d]{7,11})$") || //UK number
+                phone.matches("^(\\([0-9]{3}\\) |[0-9]{3}-)[0-9]{3}-[0-9]{4}$") //USA number
+        );
     }
 
 }
