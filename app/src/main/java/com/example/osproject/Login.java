@@ -26,6 +26,7 @@ public class Login extends AppCompatActivity {
     private SharedPreferences login_sender;
     private TextView email;
     private TextView password;
+    private TextView forgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +37,7 @@ public class Login extends AppCompatActivity {
         fbAuthLogin = FirebaseAuth.getInstance();
         password = findViewById(R.id.password);
         email = findViewById(R.id.username);
+        forgotPassword = findViewById(R.id.forgotPassword);
         login_sender = getPreferences(MODE_PRIVATE);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -70,6 +72,14 @@ public class Login extends AppCompatActivity {
                         }
                     }
                 });
+            }
+        });
+
+        forgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(Login.this,ForgotPassword.class));
+                finish();
             }
         });
     }
