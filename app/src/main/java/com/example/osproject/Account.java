@@ -62,7 +62,6 @@ public class Account extends AppCompatActivity {
         intent.setType("*/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         Intent chooser = Intent.createChooser(intent, "Select a File to Upload");
-        //Intent chooser = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         try {
             startActivityForResult(chooser, 0);
         } catch (android.content.ActivityNotFoundException ex) {
