@@ -32,23 +32,20 @@ public class Registration extends AppCompatActivity {
     private TextView password;
     private TextView phone;
 
-    private FirebaseDatabase fbDatabase;
-    private DatabaseReference DatabaseInfo;
+    private DatabaseReference dbReference;
+
 
     @Expose(serialize = false)
     private FirebaseAuth fbAuth;
 
-    SharedPreferences sender;
-    //private FirebaseDatabase fbDatabase;
-    //private DatabaseReference DatabaseInfo;
+    private SharedPreferences sender;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registration);
 
-        fbDatabase = FirebaseDatabase.getInstance();
-        DatabaseInfo = fbDatabase.getReference("Users");
+        dbReference = FirebaseDatabase.getInstance().getReference();
 
         sender = getPreferences(MODE_PRIVATE);
 
@@ -65,7 +62,8 @@ public class Registration extends AppCompatActivity {
         SignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(),Login.class));
+                startActivity(new Intent(Registration.this,Login.class));
+                finish();
             }
         });
         register.setOnClickListener(new View.OnClickListener() {
@@ -101,12 +99,15 @@ public class Registration extends AppCompatActivity {
                             Toast.makeText(Registration.this, "Authentication failed." + task.getException(),
                                     Toast.LENGTH_SHORT).show();
                         } else {
+                            FireBaseUser user = new FireBaseUser(username.getText().toString(),email.getText().toString(),phone.getText().toString());
+                            dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
 
                             SharedPreferences.Editor prefsEditor = sender.edit();
 
                             String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
                             prefsEditor.putString("fbAuth", json);
                             prefsEditor.apply();
+
                             startActivity(new Intent(Registration.this, Home.class));
                             finish();
                         }
