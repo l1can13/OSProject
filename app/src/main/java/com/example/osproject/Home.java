@@ -184,6 +184,7 @@ public class Home extends AppCompatActivity {
             backButton = sideMenuHeader.findViewById(R.id.backButton);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
             recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
+            ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
             recyclerView.setAdapter(recyclerViewAdapter);
 
             bottomNavigationView.setSelectedItemId(R.id.homeItem);

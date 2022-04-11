@@ -3,20 +3,25 @@ package com.example.osproject;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.OpenableColumns;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Calendar;
 
 public class FileCustom {
@@ -48,7 +53,7 @@ public class FileCustom {
         int size = returnCursor.getColumnIndex(OpenableColumns.SIZE);
         returnCursor.moveToFirst();
 
-        return ((double)returnCursor.getLong(size) / 1024) / 1024;
+        return ((double) returnCursor.getLong(size) / 1024) / 1024;
     }
 
     private String getFileName() {
@@ -163,11 +168,11 @@ public class FileCustom {
 
     public void downloadFile() {
         FTPClient client = new FTPClient();
-        FileOutputStream fos;
-        String mPath;
-        mPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + this.filename;
+        OutputStream fos;
+        ActivityCompat.requestPermissions((Activity)this.context, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), this.filename);
         try {
-            fos = new FileOutputStream(mPath);
+            fos = new FileOutputStream(file);
             client.connect("backup-storage5.hostiman.ru");
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
@@ -176,7 +181,22 @@ public class FileCustom {
             client.disconnect();
             System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
         } catch (IOException e) {
-            System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!");
+            System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!\n" + e);
+        }
+    }
+
+    public void deleteFile() {
+        FTPClient client = new FTPClient();
+        try {
+            client.connect("backup-storage5.hostiman.ru");
+            client.enterLocalPassiveMode();
+            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+            client.deleteFile(this.filename);
+            client.logout();
+            client.disconnect();
+            System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+        } catch (IOException e) {
+            System.out.println("ОШИБКА ПРИ УДАЛЕНИИ ФАЙЛА!\n" + e);
         }
     }
 
