@@ -46,7 +46,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 FileCustom file = new FileCustom(buf, context);
                 file.deleteFile();
                 filenamesList.remove(buf);
-                return false;
+                return true;
             }
         });
 
