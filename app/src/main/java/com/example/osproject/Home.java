@@ -98,11 +98,11 @@ public class Home extends AppCompatActivity {
 
     private void saveList(List<String> list) {
         try {
-            //dbReference.child("User_Data").child(fbAuth.getUid()).setValue(list);
-            Gson gson = new Gson();
+            dbReference.child("User_Data").child(fbAuth.getUid()).setValue(list);
+            /*Gson gson = new Gson();
             String json = gson.toJson(list);
             ed.putString(key, json);
-            ed.commit();
+            ed.commit();*/
         } catch(Exception e) {
             System.out.println("ОШИБКА ПРИ СОХРАНЕНИИ СПИСКА ИМЕН ФАЙЛОВ!");
         }
@@ -113,30 +113,33 @@ public class Home extends AppCompatActivity {
         List<String> arrayItems = new ArrayList<>();
 
         try {
-            String serializedObject = sPref.getString(key, null);
-            if (serializedObject != null) {
-                /*dbReference = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid());
-                dbReference.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        arrayItems.clear();
-                        for(DataSnapshot postSnapshot: snapshot.getChildren()){
-                            String data = postSnapshot.getValue(String.class);
-                            arrayItems.add(data);
-                        }
 
+            //String serializedObject = sPref.getString(key, null);
+            // if (serializedObject != null) {
+            dbReference = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid());
+           // List<String> finalArrayItems = arrayItems;
+            List<String> finalArrayItems = arrayItems;
+            dbReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    finalArrayItems.clear();
+                    for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                        String data = postSnapshot.getValue(String.class);
+                        finalArrayItems.add(data);
                     }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
+                }
 
-                    }
-                });*/
-                Gson gson = new Gson();
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+               /* Gson gson = new Gson();
                 Type type = new TypeToken<List<String>>() {
-                }.getType();
-                arrayItems = gson.fromJson(serializedObject, type);
-            }
+                }.getType();*/
+            arrayItems = finalArrayItems;
+            // }
         } catch (Exception e) {
             System.out.println("ПУСТО! ОШИБКА ПРИ ЗАГРУЗКЕ СПИСКА ИМЕН ФАЙЛОВ!");
         }
@@ -184,8 +187,8 @@ public class Home extends AppCompatActivity {
             startActivity(new Intent(this, Registration.class));
         } else {
             dbReference = FirebaseDatabase.getInstance().getReference();
-            sPref = getSharedPreferences(key, Context.MODE_PRIVATE);
-            ed = sPref.edit();
+            //sPref = getSharedPreferences(key, Context.MODE_PRIVATE);
+            //ed = sPref.edit();
             filenamesList = loadList();
 
             setContentView(R.layout.activity_home);
