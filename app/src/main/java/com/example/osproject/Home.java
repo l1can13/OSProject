@@ -98,6 +98,7 @@ public class Home extends AppCompatActivity {
 
     private void saveList(List<String> list) {
         try {
+            System.out.println("Типа должен");
             dbReference.child("User_Data").child(fbAuth.getUid()).setValue(list);
             /*Gson gson = new Gson();
             String json = gson.toJson(list);
@@ -116,10 +117,10 @@ public class Home extends AppCompatActivity {
 
             //String serializedObject = sPref.getString(key, null);
             // if (serializedObject != null) {
-            dbReference = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid());
+            DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid());
            // List<String> finalArrayItems = arrayItems;
             List<String> finalArrayItems = arrayItems;
-            dbReference.addValueEventListener(new ValueEventListener() {
+            dbRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     finalArrayItems.clear();
