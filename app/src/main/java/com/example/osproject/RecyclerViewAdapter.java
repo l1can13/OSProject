@@ -44,7 +44,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             @Override
             public void onClick(View view) {
                 FileCustom file = new FileCustom(buf, context);
-                file.downloadFile();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        file.downloadFile();
+                    }
+                });
+                thread.start();
             }
         });
     }

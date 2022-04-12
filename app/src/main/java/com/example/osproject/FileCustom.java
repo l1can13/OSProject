@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.OpenableColumns;
@@ -17,6 +18,7 @@ import androidx.core.content.ContextCompat;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -149,40 +151,52 @@ public class FileCustom {
     }
 
     public void upload() {
-        FTPClient fClient = new FTPClient();
-        fClient.setControlEncoding("UTF-8");
-        try {
-            FileInputStream fInput = new FileInputStream(this.context.getContentResolver().openFileDescriptor(this.uri, "rw").getFileDescriptor());
-            fClient.connect("backup-storage5.hostiman.ru");
-            fClient.enterLocalPassiveMode();
-            fClient.login("s222776", "Tmmm8eTKwZ9fHUqh");
-            fClient.setFileType(FTP.BINARY_FILE_TYPE);
-            fClient.storeFile(cyr2lat(this.filename), fInput);
-            fClient.logout();
-            fClient.disconnect();
-            System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
-        } catch (IOException ex) {
-            System.out.println("ОШИБКА ПРИ ВЫГРУЗКЕ ФАЙЛА С СЕРВЕРА!");
-        }
+        String filename = this.filename;
+        Context context = this.context;
+        Uri uri = this.uri;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                FTPClient fClient = new FTPClient();
+                fClient.setControlEncoding("UTF-8");
+                try {
+                    FileInputStream fInput = new FileInputStream(context.getContentResolver().openFileDescriptor(uri, "rw").getFileDescriptor());
+                    fClient.connect("backup-storage5.hostiman.ru");
+                    fClient.enterLocalPassiveMode();
+                    fClient.login("s222776", "Tmmm8eTKwZ9fHUqh");
+                    fClient.setFileType(FTP.BINARY_FILE_TYPE);
+                    fClient.storeFile(cyr2lat(filename), fInput);
+                    fClient.logout();
+                    fClient.disconnect();
+                    System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+                } catch (IOException ex) {
+                    System.out.println("ОШИБКА ПРИ ВЫГРУЗКЕ ФАЙЛА НА СЕРВЕР!");
+                }
+            }
+        }).start();
     }
 
     public void downloadFile() {
-        FTPClient client = new FTPClient();
-        OutputStream fos;
-        ActivityCompat.requestPermissions((Activity)this.context, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), this.filename);
-        try {
-            fos = new FileOutputStream(file);
-            client.connect("backup-storage5.hostiman.ru");
-            client.enterLocalPassiveMode();
-            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
-            client.retrieveFile("/" + this.filename, fos);
-            client.logout();
-            client.disconnect();
-            System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
-        } catch (IOException e) {
-            System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!\n" + e);
-        }
+        String filename = this.filename;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                FTPClient client = new FTPClient();
+                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
+                try {
+                    OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
+                    client.connect("backup-storage5.hostiman.ru");
+                    client.enterLocalPassiveMode();
+                    client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+                    client.retrieveFile("/" + filename, outputStream);
+                    client.logout();
+                    client.disconnect();
+                    System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+                } catch (IOException e) {
+                    System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!\n" + e);
+                }
+            }
+        }).start();
     }
 
     public void deleteFile() {

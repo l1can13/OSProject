@@ -3,7 +3,7 @@ package com.example.osproject;
 import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
 
 import android.Manifest;
-import android.app.Activity;
+import android.os.AsyncTask;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.NotificationChannel;
@@ -39,6 +39,11 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -71,6 +76,7 @@ public class Home extends AppCompatActivity {
 
     /* FireBase */
     private FirebaseAuth fbAuth;
+    private DatabaseReference dbReference;
 
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
@@ -91,6 +97,7 @@ public class Home extends AppCompatActivity {
 
     private void saveList(List<String> list) {
         try {
+            //dbReference.child("User_Data").child(fbAuth.getUid()).setValue(list);
             Gson gson = new Gson();
             String json = gson.toJson(list);
             ed.putString(key, json);
@@ -107,6 +114,23 @@ public class Home extends AppCompatActivity {
         try {
             String serializedObject = sPref.getString(key, null);
             if (serializedObject != null) {
+                /*dbReference = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid());
+                dbReference.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        arrayItems.clear();
+                        for(DataSnapshot postSnapshot: snapshot.getChildren()){
+                            String data = postSnapshot.getValue(String.class);
+                            arrayItems.add(data);
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });*/
                 Gson gson = new Gson();
                 Type type = new TypeToken<List<String>>() {
                 }.getType();
@@ -137,9 +161,6 @@ public class Home extends AppCompatActivity {
                 }
             });
             thread.start();
-            Toast.makeText(this, "Файл успешно загружен на сервер!", Toast.LENGTH_SHORT).show();
-            System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
-            thread.interrupt();
         }
     }
 
@@ -167,6 +188,7 @@ public class Home extends AppCompatActivity {
         if (fbUser == null) {
             startActivity(new Intent(this, Registration.class));
         } else {
+            dbReference = FirebaseDatabase.getInstance().getReference();
             sPref = getSharedPreferences(key, Context.MODE_PRIVATE);
             ed = sPref.edit();
             filenamesList = loadList();

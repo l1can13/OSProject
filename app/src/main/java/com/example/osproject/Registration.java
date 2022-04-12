@@ -32,23 +32,20 @@ public class Registration extends AppCompatActivity {
     private TextView password;
     private TextView phone;
 
-    private FirebaseDatabase fbDatabase;
-    private DatabaseReference DatabaseInfo;
+    private DatabaseReference dbReference;
+
 
     @Expose(serialize = false)
     private FirebaseAuth fbAuth;
 
-    SharedPreferences sender;
-    //private FirebaseDatabase fbDatabase;
-    //private DatabaseReference DatabaseInfo;
+    private SharedPreferences sender;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registration);
 
-        fbDatabase = FirebaseDatabase.getInstance();
-        DatabaseInfo = fbDatabase.getReference("Users");
+        dbReference = FirebaseDatabase.getInstance().getReference();
 
         sender = getPreferences(MODE_PRIVATE);
 
@@ -65,7 +62,8 @@ public class Registration extends AppCompatActivity {
         SignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(),Login.class));
+                startActivity(new Intent(Registration.this,Login.class));
+                finish();
             }
         });
         register.setOnClickListener(new View.OnClickListener() {
@@ -73,24 +71,20 @@ public class Registration extends AppCompatActivity {
             //Не работают Тосты
             public void onClick(View view) {
                 if(username.getText().toString().isEmpty()){
-                    Toast.makeText(getApplicationContext(), "Введите имя пользователя!", Toast.LENGTH_SHORT).show();
-                    System.out.println("USERNAMEERROR");
+                    Toast.makeText(Registration.this, "Введите имя пользователя!", Toast.LENGTH_SHORT).show();
                     return;
                 }if(password.getText().toString().length() < 10){
-                    Toast.makeText(getApplicationContext(), "Введите корректный пароль!\nЕго длина должна быть более 10 символов.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Registration.this, "Введите корректный пароль!\nЕго длина должна быть более 10 символов.", Toast.LENGTH_SHORT).show();
                     password.setText("");
-                    System.out.println("PASSWORDERROR");
                     return;
                 }
                 if(email.getText().toString().isEmpty() || !isValidEmail(email.getText().toString())){
-                    Toast.makeText(getApplicationContext(),"Некорректный email!",Toast.LENGTH_SHORT);
+                    Toast.makeText(Registration.this,"Некорректный email!",Toast.LENGTH_SHORT).show();
                     email.setText("");
-                    System.out.println("EMAILERROR");
                     return;
                 }if(phone.getText().toString().isEmpty() || !isValidPhone(phone.getText().toString())){
-                    Toast.makeText(getApplicationContext(), "Некорректный номер телефона!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Registration.this, "Некорректный номер телефона!", Toast.LENGTH_SHORT).show();
                     phone.setText("");
-                    System.out.println("PHONEERROR");
                     return;
                 }
                 fbAuth.createUserWithEmailAndPassword(email.getText().toString(),password.getText().toString())
@@ -101,12 +95,15 @@ public class Registration extends AppCompatActivity {
                             Toast.makeText(Registration.this, "Authentication failed." + task.getException(),
                                     Toast.LENGTH_SHORT).show();
                         } else {
+                            FireBaseUser user = new FireBaseUser(username.getText().toString(),email.getText().toString(),phone.getText().toString());
+                            dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
 
                             SharedPreferences.Editor prefsEditor = sender.edit();
 
                             String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
                             prefsEditor.putString("fbAuth", json);
                             prefsEditor.apply();
+
                             startActivity(new Intent(Registration.this, Home.class));
                             finish();
                         }
@@ -123,7 +120,12 @@ public class Registration extends AppCompatActivity {
     }
 
     public static boolean isValidPhone(String phone){
-        return phone.matches("^((\\+7|7|8)+([0-9]){10})$");
+
+        return (phone.matches("^((\\+7|7|8)+([0-9]){10})$") || //russian number
+                phone.matches("^((\\+?380)([0-9]{9}))$") || //ukrainian number
+                phone.matches("^(07[\\d]{8,12}|447[\\d]{7,11})$") || //UK number
+                phone.matches("^(\\([0-9]{3}\\) |[0-9]{3}-)[0-9]{3}-[0-9]{4}$") //USA number
+        );
     }
 
 }
