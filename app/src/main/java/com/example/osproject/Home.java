@@ -158,7 +158,6 @@ public class Home extends AppCompatActivity {
             filenamesList.add(file.getName());
             recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
             recyclerView.scrollToPosition(filenamesList.size() - 1);
-
             file.upload();
         }
     }

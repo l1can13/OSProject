@@ -150,6 +150,7 @@ public class FileCustom {
         String filename = this.filename;
         Context context = this.context;
         Uri uri = this.uri;
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -161,12 +162,13 @@ public class FileCustom {
                     client.enterLocalPassiveMode();
                     client.login("s222776", "Tmmm8eTKwZ9fHUqh");
                     client.setFileType(FTP.BINARY_FILE_TYPE);
+                    client.enterLocalPassiveMode();
                     client.storeFile(cyr2lat(filename.toLowerCase()), fInput);
                     client.logout();
                     client.disconnect();
                     System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
                 } catch (IOException ex) {
-                    System.out.println("ОШИБКА ПРИ ВЫГРУЗКЕ ФАЙЛА НА СЕРВЕР!");
+                    System.out.println("ОШИБКА ПРИ ВЫГРУЗКЕ ФАЙЛА НА СЕРВЕР!\n" + ex);
                 }
             }
         }).start();
@@ -189,7 +191,8 @@ public class FileCustom {
                     client.retrieveFile("/" + filename, outputStream);
                     client.logout();
                     client.disconnect();
-                    System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+                    System.out.println("ФАЙЛ УДАЛЕН!");
+                    Toast.makeText(context, "Файл удален!", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!\n" + e);
                 }
@@ -197,11 +200,12 @@ public class FileCustom {
         }).start();
     }
 
-    public void downloadAndOpen()
-    {
+    public void downloadAndOpen() {
+        Context context = this.context;
         String filename = this.filename;
+
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
-        new Thread(new Runnable() {
+        Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 FTPClient client = new FTPClient();
@@ -220,18 +224,26 @@ public class FileCustom {
                     System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!\n" + e);
                 }
             }
-        }).start();
+        });
+        thread.start();
+
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         Uri uriLocal = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
         try {
             Intent intent = new Intent();
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.setAction(Intent.ACTION_VIEW);
-            intent.setDataAndType(uriLocal, this.context.getContentResolver().getType(uriLocal));
-            this.context.startActivity(intent);
+            intent.setDataAndType(uriLocal, context.getContentResolver().getType(uriLocal));
+            context.startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this.context, "Не найдено приложений для открытия этого файла", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Не найдено приложений для открытия этого файла", Toast.LENGTH_SHORT).show();
         }
+        thread.interrupt();
     }
 
     public void deleteFile() {
@@ -247,7 +259,7 @@ public class FileCustom {
                     client.deleteFile(filename);
                     client.logout();
                     client.disconnect();
-                    System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+                    System.out.println("ФАЙЛ УДАЛЁН!");
                 } catch (IOException e) {
                     System.out.println("ОШИБКА ПРИ УДАЛЕНИИ ФАЙЛА!\n" + e);
                 }
