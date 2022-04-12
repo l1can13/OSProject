@@ -1,19 +1,15 @@
 package com.example.osproject;
 
-import android.Manifest;
-import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.pm.PackageManager;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Environment;
 import android.provider.OpenableColumns;
+import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -157,17 +153,17 @@ public class FileCustom {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                FTPClient fClient = new FTPClient();
-                fClient.setControlEncoding("UTF-8");
+                FTPClient client = new FTPClient();
+                client.setControlEncoding("UTF-8");
                 try {
                     FileInputStream fInput = new FileInputStream(context.getContentResolver().openFileDescriptor(uri, "rw").getFileDescriptor());
-                    fClient.connect("backup-storage5.hostiman.ru");
-                    fClient.enterLocalPassiveMode();
-                    fClient.login("s222776", "Tmmm8eTKwZ9fHUqh");
-                    fClient.setFileType(FTP.BINARY_FILE_TYPE);
-                    fClient.storeFile(cyr2lat(filename), fInput);
-                    fClient.logout();
-                    fClient.disconnect();
+                    client.connect("backup-storage5.hostiman.ru");
+                    client.enterLocalPassiveMode();
+                    client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+                    client.setFileType(FTP.BINARY_FILE_TYPE);
+                    client.storeFile(cyr2lat(filename.toLowerCase()), fInput);
+                    client.logout();
+                    client.disconnect();
                     System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
                 } catch (IOException ex) {
                     System.out.println("ОШИБКА ПРИ ВЫГРУЗКЕ ФАЙЛА НА СЕРВЕР!");
@@ -182,12 +178,14 @@ public class FileCustom {
             @Override
             public void run() {
                 FTPClient client = new FTPClient();
+                client.setControlEncoding("UTF-8");
                 File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
                 try {
                     OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
                     client.connect("backup-storage5.hostiman.ru");
                     client.enterLocalPassiveMode();
                     client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+                    client.setFileType(FTP.BINARY_FILE_TYPE);
                     client.retrieveFile("/" + filename, outputStream);
                     client.logout();
                     client.disconnect();
@@ -199,19 +197,62 @@ public class FileCustom {
         }).start();
     }
 
-    public void deleteFile() {
-        FTPClient client = new FTPClient();
+    public void downloadAndOpen()
+    {
+        String filename = this.filename;
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                FTPClient client = new FTPClient();
+                client.setControlEncoding("UTF-8");
+                try {
+                    OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
+                    client.connect("backup-storage5.hostiman.ru");
+                    client.enterLocalPassiveMode();
+                    client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+                    client.setFileType(FTP.BINARY_FILE_TYPE);
+                    client.retrieveFile("/" + filename, outputStream);
+                    client.logout();
+                    client.disconnect();
+                    System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+                } catch (IOException e) {
+                    System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!\n" + e);
+                }
+            }
+        }).start();
+
+        Uri uriLocal = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
         try {
-            client.connect("backup-storage5.hostiman.ru");
-            client.enterLocalPassiveMode();
-            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
-            client.deleteFile(this.filename);
-            client.logout();
-            client.disconnect();
-            System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
-        } catch (IOException e) {
-            System.out.println("ОШИБКА ПРИ УДАЛЕНИИ ФАЙЛА!\n" + e);
+            Intent intent = new Intent();
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setDataAndType(uriLocal, this.context.getContentResolver().getType(uriLocal));
+            this.context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this.context, "Не найдено приложений для открытия этого файла", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void deleteFile() {
+        String filename = this.filename;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                FTPClient client = new FTPClient();
+                try {
+                    client.connect("backup-storage5.hostiman.ru");
+                    client.enterLocalPassiveMode();
+                    client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+                    client.deleteFile(filename);
+                    client.logout();
+                    client.disconnect();
+                    System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+                } catch (IOException e) {
+                    System.out.println("ОШИБКА ПРИ УДАЛЕНИИ ФАЙЛА!\n" + e);
+                }
+            }
+        }).start();
     }
 
     public Uri getUri() {

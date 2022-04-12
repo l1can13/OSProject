@@ -40,17 +40,21 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.fileImage.setImageResource(R.drawable.file);
         holder.filename.setText(buf);
 
+        holder.recyclerViewItemsParent.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                FileCustom file = new FileCustom(buf, context);
+                file.deleteFile();
+                filenamesList.remove(buf);
+                return false;
+            }
+        });
+
         holder.recyclerViewItemsParent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 FileCustom file = new FileCustom(buf, context);
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        file.downloadFile();
-                    }
-                });
-                thread.start();
+                file.downloadAndOpen();
             }
         });
     }

@@ -3,6 +3,7 @@ package com.example.osproject;
 import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
 
 import android.Manifest;
+import android.app.Activity;
 import android.os.AsyncTask;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -154,13 +155,7 @@ public class Home extends AppCompatActivity {
             recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
             recyclerView.scrollToPosition(filenamesList.size() - 1);
 
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    file.upload();
-                }
-            });
-            thread.start();
+            file.upload();
         }
     }
 
@@ -206,6 +201,9 @@ public class Home extends AppCompatActivity {
             backButton = sideMenuHeader.findViewById(R.id.backButton);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
             recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.MANAGE_EXTERNAL_STORAGE }, 1);
+            }
             ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
             recyclerView.setAdapter(recyclerViewAdapter);
 

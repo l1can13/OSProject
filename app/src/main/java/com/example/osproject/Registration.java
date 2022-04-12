@@ -12,13 +12,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
@@ -31,6 +31,7 @@ public class Registration extends AppCompatActivity {
     private TextView username;
     private TextView password;
     private TextView phone;
+    private SignInButton googleSignInButton;
 
     private DatabaseReference dbReference;
 
@@ -55,8 +56,10 @@ public class Registration extends AppCompatActivity {
         password = findViewById(R.id.password);
         email = findViewById(R.id.email);
         phone = findViewById(R.id.phoneNumber);
-
         register = findViewById(R.id.loginButton);
+        googleSignInButton = findViewById(R.id.googleSignIn);
+
+        googleSignInButton.setSize(SignInButton.SIZE_STANDARD);
 
         SignIn = findViewById(R.id.alreadyHaveAccount);
         SignIn.setOnClickListener(new View.OnClickListener() {

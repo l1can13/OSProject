@@ -11,11 +11,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
@@ -27,6 +27,7 @@ public class Login extends AppCompatActivity {
     private TextView email;
     private TextView password;
     private TextView forgotPassword;
+    private SignInButton googleSignInButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +40,9 @@ public class Login extends AppCompatActivity {
         email = findViewById(R.id.username);
         forgotPassword = findViewById(R.id.forgotPassword);
         login_sender = getPreferences(MODE_PRIVATE);
+        googleSignInButton = findViewById(R.id.googleSignIn);
+
+        googleSignInButton.setSize(SignInButton.SIZE_STANDARD);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
