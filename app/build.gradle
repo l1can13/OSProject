@@ -56,8 +56,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-database:20.0.4'
     implementation 'com.google.gms:google-services:4.3.10'
     implementation 'com.google.firebase:firebase-storage'
+    implementation 'com.google.android.gms:play-services-auth:20.1.0'
 
-    //Чтоб загружать с бд фото в профиль
+    //Чтоб загружать с БД фото в профиль
     implementation 'com.squareup.picasso:picasso:2.71828'
 }
 apply plugin: 'com.google.gms.google-services'
