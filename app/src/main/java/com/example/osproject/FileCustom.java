@@ -33,7 +33,7 @@ public class FileCustom {
     public FileCustom(Uri uri, Context context) {
         this.context = context;
         this.uri = uri;
-        this.filename = getFileName().toLowerCase();
+        this.filename = getFileName();
         this.size = getFileSize();
         this.uploadDate = Calendar.getInstance();
     }
@@ -65,100 +65,21 @@ public class FileCustom {
         return name;
     }
 
-    public String cyr2lat(char ch) {
-        switch (ch) {
-            case 'а':
-                return "a";
-            case 'б':
-                return "b";
-            case 'в':
-                return "v";
-            case 'г':
-                return "g";
-            case 'д':
-                return "d";
-            case 'е':
-                return "e";
-            case 'ё':
-                return "je";
-            case 'ж':
-                return "zh";
-            case 'з':
-                return "z";
-            case 'и':
-                return "i";
-            case 'й':
-                return "y";
-            case 'к':
-                return "k";
-            case 'л':
-                return "l";
-            case 'м':
-                return "m";
-            case 'н':
-                return "n";
-            case 'о':
-                return "o";
-            case 'п':
-                return "p";
-            case 'р':
-                return "r";
-            case 'с':
-                return "s";
-            case 'т':
-                return "t";
-            case 'у':
-                return "u";
-            case 'ф':
-                return "f";
-            case 'х':
-                return "h";
-            case 'ц':
-                return "c";
-            case 'ч':
-                return "ch";
-            case 'ш':
-                return "sh";
-            case 'щ':
-                return "sch";
-            case 'ъ':
-                return "";
-            case 'ы':
-                return "i";
-            case 'ь':
-                return "";
-            case 'э':
-                return "e";
-            case 'ю':
-                return "u";
-            case 'я':
-                return "ia";
-            default:
-                return String.valueOf(ch);
-        }
-    }
-
-    public String cyr2lat(String s) {
-        StringBuilder sb = new StringBuilder(s.length() * 2);
-        for (char c : s.toCharArray()) {
-            sb.append(cyr2lat(c));
-        }
-        return sb.toString();
-    }
-
     public void upload() {
         FTPClient client = new FTPClient();
         client.setControlEncoding("UTF-8");
         try {
             FileInputStream fInput = new FileInputStream(this.context.getContentResolver().openFileDescriptor(this.uri, "rw").getFileDescriptor());
             client.connect("backup-storage5.hostiman.ru");
-            client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
-            client.setFileType(FTP.BINARY_FILE_TYPE);
             client.enterLocalPassiveMode();
+            client.setBufferSize(1048576);
+            System.out.println("РАЗМЕР БУФЕРА = " + client.getBufferSize());
+            client.setFileType(FTP.BINARY_FILE_TYPE);
             client.storeFile(this.filename, fInput);
             client.logout();
             client.disconnect();
+            fInput.close();
             System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
         } catch (IOException ex) {
             System.out.println("ОШИБКА ПРИ ВЫГРУЗКЕ ФАЙЛА НА СЕРВЕР!\n" + ex);
@@ -178,6 +99,7 @@ public class FileCustom {
             client.retrieveFile("/" + this.filename, outputStream);
             client.logout();
             client.disconnect();
+            outputStream.close();
             System.out.println("ФАЙЛ УДАЛЕН!");
             Toast.makeText(this.context, "Файл удален!", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
@@ -198,6 +120,7 @@ public class FileCustom {
             client.retrieveFile("/" + this.filename, outputStream);
             client.logout();
             client.disconnect();
+            outputStream.close();
             System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
         } catch (IOException e) {
             System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!\n" + e);
@@ -217,10 +140,12 @@ public class FileCustom {
 
     public void deleteFile() {
         FTPClient client = new FTPClient();
+        client.setControlEncoding("UTF-8");
         try {
             client.connect("backup-storage5.hostiman.ru");
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+            client.setFileType(FTP.BINARY_FILE_TYPE);
             client.deleteFile(this.filename);
             client.logout();
             client.disconnect();
