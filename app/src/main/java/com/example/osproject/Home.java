@@ -74,6 +74,8 @@ public class Home extends AppCompatActivity {
     private FirebaseAuth fbAuth;
     private DatabaseReference dbReference;
 
+    FTPClient client;
+
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";
@@ -152,13 +154,23 @@ public class Home extends AppCompatActivity {
                     }
                 });
                 thread.start();
-                filenamesList.add(file.getName());
-                recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
-                recyclerView.scrollToPosition(filenamesList.size() - 1);
-                saveList(filenamesList);
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (file.getFlag()) {
+                    filenamesList.add(file.getName());
+                    recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
+                    recyclerView.scrollToPosition(filenamesList.size() - 1);
+                    saveList(filenamesList);
+                }
+            } else {
+                Toast.makeText(this, "Такой файл уже есть в вашем хранилище!", Toast.LENGTH_SHORT).show();
             }
         }
     }
+
 
     @Override
     protected void onDestroy() {
@@ -186,6 +198,8 @@ public class Home extends AppCompatActivity {
         } else {
             dbReference = FirebaseDatabase.getInstance().getReference();
             filenamesList = loadList();
+
+            client = new FTPClient();
 
             setContentView(R.layout.activity_home);
             sideMenu = findViewById(R.id.navigationView);
