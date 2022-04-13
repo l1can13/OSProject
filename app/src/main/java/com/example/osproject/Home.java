@@ -145,10 +145,6 @@ public class Home extends AppCompatActivity {
             Uri uri = result.getData();
             FileCustom file = new FileCustom(uri, getApplicationContext());
             if (!isFileDuplicate(file)) {
-                filenamesList.add(file.getName());
-                recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
-                recyclerView.scrollToPosition(filenamesList.size() - 1);
-
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -156,6 +152,9 @@ public class Home extends AppCompatActivity {
                     }
                 });
                 thread.start();
+                filenamesList.add(file.getName());
+                recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
+                recyclerView.scrollToPosition(filenamesList.size() - 1);
                 saveList(filenamesList);
             }
         }
