@@ -44,7 +44,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             @Override
             public boolean onLongClick(View view) {
                 FileCustom file = new FileCustom(buf, context);
-                file.deleteFile();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        file.deleteFile();
+                    }
+                });
+                thread.start();
                 filenamesList.remove(buf);
                 return true;
             }
@@ -54,7 +60,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             @Override
             public void onClick(View view) {
                 FileCustom file = new FileCustom(buf, context);
-                file.downloadAndOpen();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        file.downloadAndOpen();
+                    }
+                });
+                thread.start();
             }
         });
     }

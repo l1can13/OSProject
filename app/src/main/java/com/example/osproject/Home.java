@@ -158,7 +158,14 @@ public class Home extends AppCompatActivity {
             filenamesList.add(file.getName());
             recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
             recyclerView.scrollToPosition(filenamesList.size() - 1);
-            file.upload();
+
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    file.upload();
+                }
+            });
+            thread.start();
         }
     }
 
