@@ -50,7 +50,7 @@ import java.util.List;
 
 public class Home extends AppCompatActivity {
 
-    /* Элементы из xml файлов */
+    /* Элементы из xml файлов123 */
     private RecyclerViewAdapter recyclerViewAdapter;
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
