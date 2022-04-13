@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -183,6 +184,8 @@ public class Home extends AppCompatActivity {
             sideMenuHeader = sideMenu.getHeaderView(0);
             backButton = sideMenuHeader.findViewById(R.id.backButton);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+
 
             recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
