@@ -127,7 +127,6 @@ public class Account extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 FireBaseUser user = snapshot.getValue(FireBaseUser.class);
-                System.out.println(user);
                 username.setText(user.getUsername());
                 userEmail.setText(user.getEmail());
             }
@@ -138,7 +137,6 @@ public class Account extends AppCompatActivity {
             }
         });
 
-        GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
 
         avatar = findViewById(R.id.userAvatar);
 
@@ -152,6 +150,7 @@ public class Account extends AppCompatActivity {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
+                GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
                 if (googleSignInAccount != null) {
                     Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
                 }
