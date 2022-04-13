@@ -45,6 +45,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
+import org.apache.commons.net.ftp.FTPClient;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -124,6 +127,16 @@ public class Home extends AppCompatActivity {
         return arrayItems;
     }
 
+    private boolean isFileDuplicate(FileCustom file){
+        for(int i = 0; i < filenamesList.size(); ++i){
+            if(filenamesList.get(i).equals(file.getName())){
+                return true;
+            }
+
+        }
+        return false;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent result) {
         super.onActivityResult(requestCode, resultCode, result);
@@ -131,17 +144,20 @@ public class Home extends AppCompatActivity {
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
             FileCustom file = new FileCustom(uri, getApplicationContext());
-            filenamesList.add(file.getName());
-            recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
-            recyclerView.scrollToPosition(filenamesList.size() - 1);
+            if (!isFileDuplicate(file)) {
+                filenamesList.add(file.getName());
+                recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
+                recyclerView.scrollToPosition(filenamesList.size() - 1);
 
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    file.upload();
-                }
-            });
-            thread.start();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        file.upload();
+                    }
+                });
+                thread.start();
+                saveList(filenamesList);
+            }
         }
     }
 
@@ -297,24 +313,24 @@ public class Home extends AppCompatActivity {
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.photoItem:
-                            saveList(filenamesList);
+                            //saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Photo.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.filesItem:
-                            saveList(filenamesList);
+                            //saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Files.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.homeItem:
                             return true;
                         case R.id.generalItem:
-                            saveList(filenamesList);
+                            //saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), General.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.accountItem:
-                            saveList(filenamesList);
+                            //saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Account.class));
                             overridePendingTransition(0, 0);
                             return true;
