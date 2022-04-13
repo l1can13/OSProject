@@ -3,8 +3,7 @@ package com.example.osproject;
 import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
 
 import android.Manifest;
-import android.app.Activity;
-import android.os.AsyncTask;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.NotificationChannel;
@@ -20,9 +19,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -46,10 +43,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,9 +64,6 @@ public class Home extends AppCompatActivity {
 
     /* Shared Preferences */
     private SharedPreferences fb_SharedPreference_settings;
-    private SharedPreferences sPref;
-    private SharedPreferences.Editor ed;
-    private final String key = "keyFiles";
     private List<String> filenamesList = new LinkedList<>();
 
     /* FireBase */
@@ -98,52 +89,36 @@ public class Home extends AppCompatActivity {
 
     private void saveList(List<String> list) {
         try {
-            System.out.println("Типа должен");
             dbReference.child("User_Data").child(fbAuth.getUid()).setValue(list);
-            /*Gson gson = new Gson();
-            String json = gson.toJson(list);
-            ed.putString(key, json);
-            ed.commit();*/
         } catch(Exception e) {
             System.out.println("ОШИБКА ПРИ СОХРАНЕНИИ СПИСКА ИМЕН ФАЙЛОВ!");
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private List<String> loadList() {
         List<String> arrayItems = new ArrayList<>();
 
-        try {
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid());
 
-            //String serializedObject = sPref.getString(key, null);
-            // if (serializedObject != null) {
-            DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid());
-           // List<String> finalArrayItems = arrayItems;
-            List<String> finalArrayItems = arrayItems;
-            dbRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    finalArrayItems.clear();
-                    for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                        String data = postSnapshot.getValue(String.class);
-                        finalArrayItems.add(data);
-                    }
-
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                arrayItems.clear();
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    String data = postSnapshot.getValue(String.class);
+                    arrayItems.add(data);
+                    recyclerViewAdapter.notifyDataSetChanged();
                 }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
+            }
 
-                }
-            });
-               /* Gson gson = new Gson();
-                Type type = new TypeToken<List<String>>() {
-                }.getType();*/
-            arrayItems = finalArrayItems;
-            // }
-        } catch (Exception e) {
-            System.out.println("ПУСТО! ОШИБКА ПРИ ЗАГРУЗКЕ СПИСКА ИМЕН ФАЙЛОВ!");
-        }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
 
         return arrayItems;
     }
@@ -194,8 +169,6 @@ public class Home extends AppCompatActivity {
             startActivity(new Intent(this, Registration.class));
         } else {
             dbReference = FirebaseDatabase.getInstance().getReference();
-            //sPref = getSharedPreferences(key, Context.MODE_PRIVATE);
-            //ed = sPref.edit();
             filenamesList = loadList();
 
             setContentView(R.layout.activity_home);
@@ -210,11 +183,13 @@ public class Home extends AppCompatActivity {
             sideMenuHeader = sideMenu.getHeaderView(0);
             backButton = sideMenuHeader.findViewById(R.id.backButton);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
             recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.MANAGE_EXTERNAL_STORAGE }, 1);
             }
             ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+
             recyclerView.setAdapter(recyclerViewAdapter);
 
             bottomNavigationView.setSelectedItemId(R.id.homeItem);
