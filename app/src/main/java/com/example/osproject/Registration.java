@@ -20,13 +20,18 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
@@ -39,6 +44,8 @@ public class Registration extends AppCompatActivity {
     private TextView username;
     private TextView password;
     private TextView phone;
+
+    private StorageReference storageReference;
 
     private SignInButton googleSignInButton;
     private GoogleSignInClient googleSignInClient;
@@ -53,50 +60,44 @@ public class Registration extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
-            Task<GoogleSignInAccount> signInAccountTask = GoogleSignIn
-                    .getSignedInAccountFromIntent(data);
+        if(requestCode == 1){
+            Task<GoogleSignInAccount> googleSignInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try{
+                GoogleSignInAccount googleSignInAccount = googleSignInAccountTask.getResult(ApiException.class);
+                fbAuthWithGoogle(googleSignInAccount);
+            }catch (Exception e){
 
-            // check condition
-            if (signInAccountTask.isSuccessful()) {
-                Toast.makeText(this, "Вход выполнен успешно!", Toast.LENGTH_SHORT).show();
-                try {
-                    // Initialize sign in account
-                    GoogleSignInAccount googleSignInAccount = signInAccountTask
-                            .getResult(ApiException.class);
-                    // Check condition
-                    if (googleSignInAccount != null) {
-                        AuthCredential authCredential = GoogleAuthProvider
-                                .getCredential(googleSignInAccount.getIdToken()
-                                        , null);
-                        // Check credential
-                        fbAuth.signInWithCredential(authCredential)
-                                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<AuthResult> task) {
-                                        // Check condition
-                                        if (task.isSuccessful()) {
-                                            SharedPreferences.Editor prefsEditor = sender.edit();
-
-                                            String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
-                                            prefsEditor.putString("fbAuth", json);
-                                            prefsEditor.apply();
-                                            startActivity(new Intent(Registration.this, Home.class));
-                                            finish();       //.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-
-                                        } else {
-                                            Toast.makeText(Registration.this, "Authentication Failed :" + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-
-                                        }
-                                    }
-                                });
-
-                    }
-                } catch (ApiException e) {
-                    e.printStackTrace();
-                }
             }
         }
+    }
+
+    private void fbAuthWithGoogle(GoogleSignInAccount googleSignInAccount) {
+        AuthCredential authCredential = GoogleAuthProvider.getCredential(googleSignInAccount.getIdToken(), null);
+        fbAuth.signInWithCredential(authCredential)
+                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                    @Override
+                    public void onSuccess(AuthResult authResult) {
+
+                        FirebaseUser FBUser = fbAuth.getCurrentUser();
+                        FireBaseUser user = new FireBaseUser(FBUser.getDisplayName(), FBUser.getEmail(), FBUser.getPhoneNumber());
+                        dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
+
+
+                        SharedPreferences.Editor prefsEditor = sender.edit();
+
+                        String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
+                        prefsEditor.putString("fbAuth", json);
+                        prefsEditor.apply();
+
+                        startActivity(new Intent(Registration.this, Home.class));
+                        finish();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(Registration.this, "Что-то пошло не так. Попробуйте снова.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -110,19 +111,20 @@ public class Registration extends AppCompatActivity {
 
         fbAuth = FirebaseAuth.getInstance();
 
+        storageReference = FirebaseStorage.getInstance().getReference();
+
         username = findViewById(R.id.username);
         password = findViewById(R.id.password);
         email = findViewById(R.id.email);
         phone = findViewById(R.id.phoneNumber);
         register = findViewById(R.id.loginButton);
 
-        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(
-                GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("941795891483-vb8u1i85ul5sumpvmbm57ibgr5ehnev3.apps.googleusercontent.com")
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
 
-        googleSignInClient = GoogleSignIn.getClient(Registration.this, googleSignInOptions);
+        googleSignInClient = GoogleSignIn.getClient(Registration.this, gso);
 
         googleSignInButton = findViewById(R.id.googleSignIn);
         googleSignInButton.setSize(SignInButton.SIZE_STANDARD);
