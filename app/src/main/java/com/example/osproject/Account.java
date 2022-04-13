@@ -18,6 +18,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
@@ -45,7 +49,7 @@ public class Account extends AppCompatActivity {
     private RelativeLayout version;
     private LinearLayout clearCache;
     private CircleImageView avatar;
-    private Uri uri;
+    private GoogleSignInClient googleSignInClient;
     private StorageReference storageReference;
 
     private TextView logout_button;
@@ -104,6 +108,12 @@ public class Account extends AppCompatActivity {
 
         logout_button = findViewById(R.id.logout);
 
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        googleSignInClient = GoogleSignIn.getClient(Account.this, gso);
         fbAuth = FirebaseAuth.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference();
 
@@ -124,10 +134,13 @@ public class Account extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                //Toast.makeText(Account.this, "Такого пользователя нет!", Toast.LENGTH_SHORT).show();
+
             }
         });
 
+        GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
+
+        avatar = findViewById(R.id.userAvatar);
 
         StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
 
@@ -135,6 +148,13 @@ public class Account extends AppCompatActivity {
             @Override
             public void onSuccess(Uri uri) {
                 Picasso.get().load(uri).into(avatar);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                if (googleSignInAccount != null) {
+                    Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
+                }
             }
         });
         bottomNavigationView = findViewById(R.id.bottomMenu);
@@ -149,6 +169,7 @@ public class Account extends AppCompatActivity {
             public void onClick(View view) {
 
                 fbAuth.signOut();
+                googleSignInClient.signOut();
 
                 SharedPreferences.Editor prefsEditor = accountPref.edit();
                 prefsEditor.remove("fbAuth");
@@ -159,7 +180,7 @@ public class Account extends AppCompatActivity {
             }
         });
 
-        avatar = findViewById(R.id.userAvatar);
+
         avatar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
