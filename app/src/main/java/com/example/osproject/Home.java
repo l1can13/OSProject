@@ -32,6 +32,10 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -43,7 +47,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
+import com.squareup.picasso.Picasso;
 
 import org.apache.commons.net.ftp.FTPClient;
 
@@ -51,6 +58,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class Home extends AppCompatActivity {
 
@@ -66,6 +75,11 @@ public class Home extends AppCompatActivity {
     private NotificationManager notificationManager;
     private RecyclerView recyclerView;
 
+    /*Элементы для бокового меню*/
+    private TextView left_side_username;
+    private TextView left_side_email;
+    private CircleImageView left_side_avatar;
+
     /* Shared Preferences */
     private SharedPreferences fb_SharedPreference_settings;
     private List<String> filenamesList = new LinkedList<>();
@@ -73,6 +87,7 @@ public class Home extends AppCompatActivity {
     /* FireBase */
     private FirebaseAuth fbAuth;
     private DatabaseReference dbReference;
+    private StorageReference storageReference;
 
     FTPClient client;
 
@@ -212,9 +227,44 @@ public class Home extends AppCompatActivity {
 
             sideMenuHeader = sideMenu.getHeaderView(0);
             backButton = sideMenuHeader.findViewById(R.id.backButton);
+
+
+
+            left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
+            left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
+            left_side_username = sideMenuHeader.findViewById(R.id.username);
+
+            dbReference.child("User_Info").child(fbAuth.getUid()).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    FireBaseUser user = snapshot.getValue(FireBaseUser.class);
+                    left_side_username.setText(user.getUsername());
+                    left_side_email.setText(user.getEmail());
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+            StorageReference profileRef = FirebaseStorage.getInstance().getReference()
+                    .child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+            profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Picasso.get().load(uri).into(left_side_avatar);
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
+                    if (googleSignInAccount != null) {
+                        Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
+                    }
+                }
+            });
+
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-
 
             recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
