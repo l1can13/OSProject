@@ -166,7 +166,7 @@ public class Home extends AppCompatActivity {
                     saveList(filenamesList);
                 }
             } else {
-                Toast.makeText(this, "Такой файл уже есть в вашем хранилище!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(Home.this, "Такой файл уже есть в вашем хранилище!", Toast.LENGTH_SHORT).show();
             }
         }
     }
