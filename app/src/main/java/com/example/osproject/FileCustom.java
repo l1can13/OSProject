@@ -104,7 +104,6 @@ public class FileCustom {
         FTPClient client = new FTPClient();
         client.setControlEncoding("UTF-8");
         try {
-//            String email = "maksimz9013@gmail.com";
             String userId = this.fbAuth.getUid();
             FileInputStream fInput = new FileInputStream(this.context.getContentResolver().openFileDescriptor(this.uri, "rw").getFileDescriptor());
             client.connect("backup-storage5.hostiman.ru");
