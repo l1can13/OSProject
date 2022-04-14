@@ -74,9 +74,6 @@ public class Home extends AppCompatActivity {
     private View sideMenuHeader;
     private NotificationManager notificationManager;
     private RecyclerView recyclerView;
-
-    private AlertDialog AlDialog;
-
     /*Элементы для бокового меню*/
     private TextView left_side_username;
     private TextView left_side_email;
@@ -89,9 +86,6 @@ public class Home extends AppCompatActivity {
     /* FireBase */
     private FirebaseAuth fbAuth;
     private DatabaseReference dbReference;
-    private StorageReference storageReference;
-
-    FTPClient client;
 
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
@@ -215,8 +209,6 @@ public class Home extends AppCompatActivity {
             if (fbUser.isEmailVerified()) {
                 dbReference = FirebaseDatabase.getInstance().getReference();
                 filenamesList = loadList();
-
-                client = new FTPClient();
 
                 setContentView(R.layout.activity_home);
                 sideMenu = findViewById(R.id.navigationView);
