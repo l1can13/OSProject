@@ -168,14 +168,25 @@ public class Registration extends AppCompatActivity {
                     phone.setText("");
                     return;
                 }
+
                 fbAuth.createUserWithEmailAndPassword(email.getText().toString(),password.getText().toString())
                 .addOnCompleteListener(Registration.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (!task.isSuccessful()) {
-                            Toast.makeText(Registration.this, "Authentication failed." + task.getException(),
+                            Toast.makeText(Registration.this, "Регистрация не завершилась!" + task.getException(),
                                     Toast.LENGTH_SHORT).show();
                         } else {
+
+                            //шлём подвтерждение по почте
+                            fbAuth.getCurrentUser().sendEmailVerification()
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void unused) {
+                                    Toast.makeText(Registration.this, "Пиьсмо с подтверждением отправлено на почту " + email.getText().toString(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
                             FireBaseUser user = new FireBaseUser(username.getText().toString(),email.getText().toString(),phone.getText().toString());
                             dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
 
