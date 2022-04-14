@@ -7,8 +7,11 @@ import android.annotation.SuppressLint;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.MenuItem;
 
 import android.view.View;
@@ -22,17 +25,21 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
@@ -40,13 +47,17 @@ import com.google.firebase.storage.UploadTask;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.StandardOpenOption;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class Account extends AppCompatActivity{
+public class Account extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigationView;
     private LinearLayout darkMode;
@@ -142,10 +153,10 @@ public class Account extends AppCompatActivity{
             }
         });
 
-
         avatar = findViewById(R.id.userAvatar);
 
         StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+
         profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
@@ -158,6 +169,15 @@ public class Account extends AppCompatActivity{
                 if (googleSignInAccount != null) {
                     Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
                 }
+                else{
+                    StorageReference Ref = storageReference.child("profile_avatars").child("default.jpg");
+                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).into(avatar);
+                        }
+                    });
+                }
             }
         });
 
@@ -166,7 +186,6 @@ public class Account extends AppCompatActivity{
         sendFeedback = findViewById(R.id.feedback);
         version = findViewById(R.id.version);
         clearCache = findViewById(R.id.clearCache);
-
 
         logout_button.setOnClickListener(new View.OnClickListener() {
             @Override

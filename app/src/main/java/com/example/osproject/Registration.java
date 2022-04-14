@@ -29,12 +29,18 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.PicassoProvider;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 
 public class Registration extends AppCompatActivity {
@@ -111,7 +117,7 @@ public class Registration extends AppCompatActivity {
         sender = getPreferences(MODE_PRIVATE);
 
         fbAuth = FirebaseAuth.getInstance();
-
+        CircleImageView avatar = findViewById(R.id.userAvatar);
         storageReference = FirebaseStorage.getInstance().getReference();
 
         username = findViewById(R.id.username);
@@ -186,21 +192,13 @@ public class Registration extends AppCompatActivity {
                                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                 @Override
                                                 public void onSuccess(Void unused) {
-                                                    Toast.makeText(Registration.this, "Пиьсмо с подтверждением отправлено на почту " + email.getText().toString(), Toast.LENGTH_SHORT).show();
+                                                    Toast.makeText(Registration.this, "Письмо с подтверждением отправлено на почту " + email.getText().toString(), Toast.LENGTH_SHORT).show();
                                                 }
                                             });
 
                                     FireBaseUser user = new FireBaseUser(username.getText().toString(), email.getText().toString(), phone.getText().toString());
                                     dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
 
-                                    StorageReference fileRef = storageReference.child("profile_avatars").child("default.jpg");
-                                    fileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                        @Override
-                                        public void onSuccess(Uri uri) {
-                                            StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
-                                            profileRef.putFile(uri);
-                                        }
-                                    });
                                     SharedPreferences.Editor prefsEditor = sender.edit();
 
                                     String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);

@@ -242,6 +242,7 @@ public class Home extends AppCompatActivity {
                 });
                 StorageReference profileRef = FirebaseStorage.getInstance().getReference()
                         .child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+
                 profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
@@ -253,6 +254,18 @@ public class Home extends AppCompatActivity {
                         GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
                         if (googleSignInAccount != null) {
                             Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
+                        }
+                        else{
+                            StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                                    .child("profile_avatars").child("default.jpg");
+                            System.out.println("LISTALL: "+Ref.listAll());
+
+                            Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    Picasso.get().load(uri).into(left_side_avatar);
+                                }
+                            });
                         }
                     }
                 });
