@@ -61,12 +61,12 @@ public class Registration extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == 1){
+        if (requestCode == 1) {
             Task<GoogleSignInAccount> googleSignInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try{
+            try {
                 GoogleSignInAccount googleSignInAccount = googleSignInAccountTask.getResult(ApiException.class);
                 fbAuthWithGoogle(googleSignInAccount);
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
         }
@@ -136,7 +136,7 @@ public class Registration extends AppCompatActivity {
 
                 Intent intent = googleSignInClient.getSignInIntent();
 
-                startActivityForResult(intent,1);
+                startActivityForResult(intent, 1);
             }
         });
 
@@ -144,7 +144,7 @@ public class Registration extends AppCompatActivity {
         SignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(Registration.this,Login.class));
+                startActivity(new Intent(Registration.this, Login.class));
                 finish();
             }
         });
@@ -152,64 +152,66 @@ public class Registration extends AppCompatActivity {
             @Override
             //Не работают Тосты
             public void onClick(View view) {
-                if(username.getText().toString().isEmpty()){
+                if (username.getText().toString().isEmpty()) {
                     Toast.makeText(Registration.this, "Введите имя пользователя!", Toast.LENGTH_SHORT).show();
                     return;
-                }if(password.getText().toString().length() < 10){
+                }
+                if (password.getText().toString().length() < 10) {
                     Toast.makeText(Registration.this, "Введите корректный пароль!\nЕго длина должна быть более 10 символов.", Toast.LENGTH_SHORT).show();
                     password.setText("");
                     return;
                 }
-                if(email.getText().toString().isEmpty() || !isValidEmail(email.getText().toString())){
-                    Toast.makeText(Registration.this,"Некорректный email!",Toast.LENGTH_SHORT).show();
+                if (email.getText().toString().isEmpty() || !isValidEmail(email.getText().toString())) {
+                    Toast.makeText(Registration.this, "Некорректный email!", Toast.LENGTH_SHORT).show();
                     email.setText("");
                     return;
-                }if(phone.getText().toString().isEmpty() || !isValidPhone(phone.getText().toString())){
+                }
+                if (phone.getText().toString().isEmpty() || !isValidPhone(phone.getText().toString())) {
                     Toast.makeText(Registration.this, "Некорректный номер телефона!", Toast.LENGTH_SHORT).show();
                     phone.setText("");
                     return;
                 }
 
-                fbAuth.createUserWithEmailAndPassword(email.getText().toString(),password.getText().toString())
-                .addOnCompleteListener(Registration.this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (!task.isSuccessful()) {
-                            Toast.makeText(Registration.this, "Регистрация не завершилась!" + task.getException(),
-                                    Toast.LENGTH_SHORT).show();
-                        } else {
+                fbAuth.createUserWithEmailAndPassword(email.getText().toString(), password.getText().toString())
+                        .addOnCompleteListener(Registration.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (!task.isSuccessful()) {
+                                    Toast.makeText(Registration.this, "Регистрация не завершилась!" + task.getException(),
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
 
-                            //шлём подвтерждение по почте
-                            fbAuth.getCurrentUser().sendEmailVerification()
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void unused) {
-                                    Toast.makeText(Registration.this, "Пиьсмо с подтверждением отправлено на почту " + email.getText().toString(), Toast.LENGTH_SHORT).show();
+                                    //шлём подвтерждение по почте
+                                    fbAuth.getCurrentUser().sendEmailVerification()
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void unused) {
+                                                    Toast.makeText(Registration.this, "Пиьсмо с подтверждением отправлено на почту " + email.getText().toString(), Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+
+                                    FireBaseUser user = new FireBaseUser(username.getText().toString(), email.getText().toString(), phone.getText().toString());
+                                    dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
+
+                                    StorageReference fileRef = storageReference.child("profile_avatars").child("default.jpg");
+                                    fileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                        @Override
+                                        public void onSuccess(Uri uri) {
+                                            StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+                                            profileRef.putFile(uri);
+                                        }
+                                    });
+                                    SharedPreferences.Editor prefsEditor = sender.edit();
+
+                                    String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
+                                    prefsEditor.putString("fbAuth", json);
+                                    prefsEditor.apply();
+
+                                    startActivity(new Intent(Registration.this, Home.class));
+                                    finish();
                                 }
-                            });
-
-                            FireBaseUser user = new FireBaseUser(username.getText().toString(),email.getText().toString(),phone.getText().toString());
-                            dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
-
-                            StorageReference fileRef = storageReference.child("profile_avatars").child("default.jpg");
-                            fileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
-                                    profileRef.putFile(uri);
-                                }
-                            });
-                            SharedPreferences.Editor prefsEditor = sender.edit();
-
-                            String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
-                            prefsEditor.putString("fbAuth", json);
-                            prefsEditor.apply();
-
-                            startActivity(new Intent(Registration.this, Home.class));
-                            finish();
-                        }
-                    }
-                });
+                            }
+                        });
 
 
             }
@@ -220,7 +222,7 @@ public class Registration extends AppCompatActivity {
         return !TextUtils.isEmpty(target) && android.util.Patterns.EMAIL_ADDRESS.matcher(target).matches();
     }
 
-    public static boolean isValidPhone(String phone){
+    public static boolean isValidPhone(String phone) {
 
         return (phone.matches("^((\\+7|7|8)+([0-9]){10})$") || //russian number
                 phone.matches("^((\\+?380)([0-9]{9}))$") || //ukrainian number
