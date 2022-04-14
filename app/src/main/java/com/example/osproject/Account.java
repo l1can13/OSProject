@@ -97,8 +97,47 @@ public class Account extends AppCompatActivity {
         }
     }
 
+    private void setAvatar(StorageReference profileRef){
+
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
+                            if(googleSignInAccount != null)
+                                Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
+                            else
+                                Picasso.get().load(uri).into(avatar);
+                        }
+                    });
+                }else{
+                    StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                            .child("profile_avatars").child("default.jpg");
+                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).into(avatar);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
     private void uploadImageToFirebase(Uri ImageUri) {
         StorageReference fileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar");
+        dbRef.child(fbAuth.getUid()).setValue(fbAuth.getUid()+".jpg");
 
         fileRef.putFile(ImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -157,29 +196,7 @@ public class Account extends AppCompatActivity {
 
         StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
 
-        profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-            @Override
-            public void onSuccess(Uri uri) {
-                Picasso.get().load(uri).into(avatar);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
-                if (googleSignInAccount != null) {
-                    Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
-                }
-                else{
-                    StorageReference Ref = storageReference.child("profile_avatars").child("default.jpg");
-                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            Picasso.get().load(uri).into(avatar);
-                        }
-                    });
-                }
-            }
-        });
+        setAvatar(profileRef);
 
         bottomNavigationView = findViewById(R.id.bottomMenu);
         darkMode = findViewById(R.id.darkMode);
