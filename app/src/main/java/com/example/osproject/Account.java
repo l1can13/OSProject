@@ -34,14 +34,19 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.nio.file.StandardOpenOption;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class Account extends AppCompatActivity {
+public class Account extends AppCompatActivity{
 
     private BottomNavigationView bottomNavigationView;
     private LinearLayout darkMode;
@@ -141,7 +146,6 @@ public class Account extends AppCompatActivity {
         avatar = findViewById(R.id.userAvatar);
 
         StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
-
         profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
@@ -156,6 +160,7 @@ public class Account extends AppCompatActivity {
                 }
             }
         });
+
         bottomNavigationView = findViewById(R.id.bottomMenu);
         darkMode = findViewById(R.id.darkMode);
         sendFeedback = findViewById(R.id.feedback);
