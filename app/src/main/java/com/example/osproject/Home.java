@@ -71,9 +71,6 @@ public class Home extends AppCompatActivity {
     private View sideMenuHeader;
     private NotificationManager notificationManager;
     private RecyclerView recyclerView;
-
-    private AlertDialog AlDialog;
-
     /*Элементы для бокового меню*/
     private TextView left_side_username;
     private TextView left_side_email;

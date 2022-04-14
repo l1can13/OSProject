@@ -10,8 +10,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -110,13 +112,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
 
         holder.filename.setText(buf);
-        holder.checkBox.setImageResource(R.drawable.checkbox);
         holder.recyclerViewItemsParent.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
 
                 if (!isEnable) {
-
                     ActionMode.Callback callback = new ActionMode.Callback() {
 
                         @Override
@@ -144,7 +144,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                             int id = menuItem.getItemId();
                             switch (id) {
                                 case R.id.menu_delete:
-
                                     for (String s : selectList) {
                                         Thread thread = new Thread(new Runnable() {
                                             @Override
@@ -239,8 +238,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public class ViewHolder extends RecyclerView.ViewHolder {
         ImageView fileImage;
         TextView filename;
-        LinearLayout recyclerViewItemsParent;
-        ImageView checkBox;
+        RelativeLayout recyclerViewItemsParent;
+        CheckBox checkBox;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
