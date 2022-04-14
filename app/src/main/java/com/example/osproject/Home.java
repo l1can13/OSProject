@@ -111,10 +111,11 @@ public class Home extends AppCompatActivity {
     private void saveList(List<String> list) {
         try {
             dbReference.child("User_Data").child(fbAuth.getUid()).setValue(list);
-        } catch(Exception e) {
+        } catch (Exception e) {
             System.out.println("ОШИБКА ПРИ СОХРАНЕНИИ СПИСКА ИМЕН ФАЙЛОВ!");
         }
     }
+
 
     @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -144,9 +145,9 @@ public class Home extends AppCompatActivity {
         return arrayItems;
     }
 
-    private boolean isFileDuplicate(FileCustom file){
-        for(int i = 0; i < filenamesList.size(); ++i){
-            if(filenamesList.get(i).equals(file.getName())){
+    private boolean isFileDuplicate(FileCustom file) {
+        for (int i = 0; i < filenamesList.size(); ++i) {
+            if (filenamesList.get(i).equals(file.getName())) {
                 return true;
             }
 
@@ -160,7 +161,7 @@ public class Home extends AppCompatActivity {
 
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
-            FileCustom file = new FileCustom(uri, getApplicationContext());
+            FileCustom file = new FileCustom(uri, getApplicationContext(), fbAuth);
             if (!isFileDuplicate(file)) {
                 Thread thread = new Thread(new Runnable() {
                     @Override
@@ -198,7 +199,7 @@ public class Home extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+        ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         fb_SharedPreference_settings = getPreferences(MODE_PRIVATE);
         fbAuth = FirebaseAuth.getInstance();
         if (fb_SharedPreference_settings.contains("fbAuth")) {
@@ -228,7 +229,6 @@ public class Home extends AppCompatActivity {
 
             sideMenuHeader = sideMenu.getHeaderView(0);
             backButton = sideMenuHeader.findViewById(R.id.backButton);
-
 
 
             left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
@@ -267,11 +267,11 @@ public class Home extends AppCompatActivity {
 
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-            recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
+            recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList, fbAuth);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.MANAGE_EXTERNAL_STORAGE }, 1);
+                ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
             }
-            ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+            ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
 
             recyclerView.setAdapter(recyclerViewAdapter);
 
