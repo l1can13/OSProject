@@ -37,7 +37,51 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(@NonNull RecyclerViewAdapter.ViewHolder holder, int position) {
         String buf = filenamesList.get(position);
 
-        holder.fileImage.setImageResource(R.drawable.file);
+        StringBuilder typeOfFile = new StringBuilder("");
+        for(int i = buf.length() - 1; i > 0; --i) {
+            if(buf.charAt(i) == '.')
+                break;
+            typeOfFile.append(buf.charAt(i));
+        }
+        switch (typeOfFile.reverse().toString()) {
+            case "doc":
+                holder.fileImage.setImageResource(R.drawable.doc);
+                break;
+            case "docx":
+                holder.fileImage.setImageResource(R.drawable.docx);
+                break;
+            case "gif":
+                holder.fileImage.setImageResource(R.drawable.gif);
+                break;
+            case "jpg":
+                holder.fileImage.setImageResource(R.drawable.jpg);
+                break;
+            case "mp3":
+                holder.fileImage.setImageResource(R.drawable.mp3);
+                break;
+            case "mp4":
+                holder.fileImage.setImageResource(R.drawable.mp4);
+                break;
+            case "pdf":
+                holder.fileImage.setImageResource(R.drawable.pdf);
+                break;
+            case "ppt":
+                holder.fileImage.setImageResource(R.drawable.ppt);
+                break;
+            case "pptx":
+                holder.fileImage.setImageResource(R.drawable.pptx);
+                break;
+            case "txt":
+                holder.fileImage.setImageResource(R.drawable.txt);
+                break;
+            case "xlsx":
+                holder.fileImage.setImageResource(R.drawable.xlsx);
+                break;
+            default:
+                holder.fileImage.setImageResource(R.drawable.file);
+                break;
+        }
+
         holder.filename.setText(buf);
 
         holder.recyclerViewItemsParent.setOnLongClickListener(new View.OnLongClickListener() {
