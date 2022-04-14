@@ -197,6 +197,11 @@ public class FileCustom {
         }
     }
 
+//    public void moveToTrash(FileCustom file) {
+//            new Home().addToThrashList(file);
+//            System.out.println("Файл перемещен в мусор");
+//    }
+
     public Uri getUri() {
         return this.uri;
     }

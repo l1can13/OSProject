@@ -22,6 +22,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     Context context;
     List<String> filenamesList;
+    List<String> trashList;
     FirebaseAuth fbAuth;
 
     RecyclerViewAdapter(Context context, List<String> filenamesList, FirebaseAuth fbAuth) {
@@ -92,14 +93,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             @Override
             public boolean onLongClick(View view) {
                 FileCustom file = new FileCustom(buf, context, fbAuth);
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        file.deleteFile();
-                    }
-                });
-                thread.start();
-                filenamesList.remove(buf);
+//                Thread thread = new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        file.moveToTrash(file);
+//                    }
+//                });
+//                thread.start();
+                new Home().addToThrashList(file);
+//                filenamesList.remove(buf);
                 return true;
             }
         });

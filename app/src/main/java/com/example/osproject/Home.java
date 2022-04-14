@@ -83,6 +83,7 @@ public class Home extends AppCompatActivity {
     /* Shared Preferences */
     private SharedPreferences fb_SharedPreference_settings;
     private List<String> filenamesList = new LinkedList<>();
+    private List<String> thrashList = new LinkedList<>();
 
     /* FireBase */
     private FirebaseAuth fbAuth;
@@ -94,6 +95,12 @@ public class Home extends AppCompatActivity {
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";
+
+    public void addToThrashList(FileCustom file) {
+        thrashList.add(file.getName());
+        System.out.println(thrashList.get(0));
+    }
+
 
     public void showFileChooser() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
