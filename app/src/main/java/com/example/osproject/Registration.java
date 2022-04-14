@@ -2,6 +2,7 @@ package com.example.osproject;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -168,17 +169,36 @@ public class Registration extends AppCompatActivity {
                     phone.setText("");
                     return;
                 }
+
                 fbAuth.createUserWithEmailAndPassword(email.getText().toString(),password.getText().toString())
                 .addOnCompleteListener(Registration.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (!task.isSuccessful()) {
-                            Toast.makeText(Registration.this, "Authentication failed." + task.getException(),
+                            Toast.makeText(Registration.this, "Регистрация не завершилась!" + task.getException(),
                                     Toast.LENGTH_SHORT).show();
                         } else {
+
+                            //шлём подвтерждение по почте
+                            fbAuth.getCurrentUser().sendEmailVerification()
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void unused) {
+                                    Toast.makeText(Registration.this, "Пиьсмо с подтверждением отправлено на почту " + email.getText().toString(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
                             FireBaseUser user = new FireBaseUser(username.getText().toString(),email.getText().toString(),phone.getText().toString());
                             dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
 
+                            StorageReference fileRef = storageReference.child("profile_avatars").child("default.jpg");
+                            fileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+                                    profileRef.putFile(uri);
+                                }
+                            });
                             SharedPreferences.Editor prefsEditor = sender.edit();
 
                             String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
