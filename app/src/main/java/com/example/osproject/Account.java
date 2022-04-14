@@ -204,14 +204,6 @@ public class Account extends AppCompatActivity{
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.photoItem:
-                        startActivity(new Intent(getApplicationContext(), Photo.class));
-                        overridePendingTransition(0, 0);
-                        return true;
-                    case R.id.filesItem:
-                        startActivity(new Intent(getApplicationContext(), Files.class));
-                        overridePendingTransition(0, 0);
-                        return true;
                     case R.id.homeItem:
                         startActivity(new Intent(getApplicationContext(), Home.class));
                         overridePendingTransition(0, 0);

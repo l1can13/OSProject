@@ -145,7 +145,6 @@ public class Home extends AppCompatActivity {
             if(filenamesList.get(i).equals(file.getName())){
                 return true;
             }
-
         }
         return false;
     }
@@ -369,25 +368,13 @@ public class Home extends AppCompatActivity {
                     @Override
                     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                         switch (item.getItemId()) {
-                            case R.id.photoItem:
-                                //saveList(filenamesList);
-                                startActivity(new Intent(getApplicationContext(), Photo.class));
-                                overridePendingTransition(0, 0);
-                                return true;
-                            case R.id.filesItem:
-                                //saveList(filenamesList);
-                                startActivity(new Intent(getApplicationContext(), Files.class));
-                                overridePendingTransition(0, 0);
-                                return true;
                             case R.id.homeItem:
                                 return true;
                             case R.id.generalItem:
-                                //saveList(filenamesList);
                                 startActivity(new Intent(getApplicationContext(), General.class));
                                 overridePendingTransition(0, 0);
                                 return true;
                             case R.id.accountItem:
-                                //saveList(filenamesList);
                                 startActivity(new Intent(getApplicationContext(), Account.class));
                                 overridePendingTransition(0, 0);
                                 return true;
