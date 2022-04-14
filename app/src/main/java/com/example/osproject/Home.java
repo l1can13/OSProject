@@ -50,7 +50,7 @@ import java.util.List;
 
 public class Home extends AppCompatActivity {
 
-    /* Элементы из xml файлов123 */
+    /* Элементы из xml файлов */
     private RecyclerViewAdapter recyclerViewAdapter;
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
@@ -95,6 +95,8 @@ public class Home extends AppCompatActivity {
         }
     }
 
+
+
     @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private List<String> loadList() {
@@ -137,7 +139,7 @@ public class Home extends AppCompatActivity {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    file.upload();
+                    file.upload(fbAuth);
                 }
             });
             thread.start();
