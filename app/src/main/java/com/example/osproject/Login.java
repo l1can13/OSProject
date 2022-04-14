@@ -99,7 +99,7 @@ public class Login extends AppCompatActivity {
         loginButton = findViewById(R.id.loginButton);
         fbAuthLogin = FirebaseAuth.getInstance();
         password = findViewById(R.id.password);
-        email = findViewById(R.id.username);
+        email = findViewById(R.id.email);
         forgotPassword = findViewById(R.id.forgotPassword);
         login_sender = getPreferences(MODE_PRIVATE);
         backOnRegistration = findViewById(R.id.backOnRegistration);
