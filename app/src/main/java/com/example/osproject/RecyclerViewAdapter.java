@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.io.FileNotFoundException;
 import java.util.List;
 
@@ -20,10 +22,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     Context context;
     List<String> filenamesList;
+    FirebaseAuth fbAuth;
 
-    RecyclerViewAdapter(Context context, List<String> filenamesList) {
+    RecyclerViewAdapter(Context context, List<String> filenamesList, FirebaseAuth fbAuth) {
         this.context = context;
         this.filenamesList = filenamesList;
+        this.fbAuth = fbAuth;
     }
 
     @NonNull
@@ -87,7 +91,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.recyclerViewItemsParent.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                FileCustom file = new FileCustom(buf, context);
+                FileCustom file = new FileCustom(buf, context, fbAuth);
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -103,7 +107,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.recyclerViewItemsParent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FileCustom file = new FileCustom(buf, context);
+                FileCustom file = new FileCustom(buf, context, fbAuth);
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {

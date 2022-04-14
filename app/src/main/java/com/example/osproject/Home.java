@@ -161,39 +161,29 @@ public class Home extends AppCompatActivity {
 
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
-            FileCustom file = new FileCustom(uri, getApplicationContext());
-            filenamesList.add(file.getName());
-            recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
-            recyclerView.scrollToPosition(filenamesList.size() - 1);
-
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    file.upload();
-                    if (!isFileDuplicate(file)) {
-                        Thread thread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                file.upload();
-                            }
-                        });
-                        thread.start();
-                        try {
-                            thread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        if (file.getFlag()) {
-                            filenamesList.add(file.getName());
-                            recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
-                            recyclerView.scrollToPosition(filenamesList.size() - 1);
-                            saveList(filenamesList);
-                        }
-                    } else {
-                        Toast.makeText(Home.this, "Такой файл уже есть в вашем хранилище!", Toast.LENGTH_SHORT).show();
+            FileCustom file = new FileCustom(uri, getApplicationContext(), fbAuth);
+            if (!isFileDuplicate(file)) {
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        file.upload();
                     }
+                });
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            });
+                if (file.getFlag()) {
+                    filenamesList.add(file.getName());
+                    recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
+                    recyclerView.scrollToPosition(filenamesList.size() - 1);
+                    saveList(filenamesList);
+                }
+            } else {
+                Toast.makeText(Home.this, "Такой файл уже есть в вашем хранилище!", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -276,7 +266,7 @@ public class Home extends AppCompatActivity {
 
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-            recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
+            recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList, fbAuth);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
             }
@@ -386,24 +376,24 @@ public class Home extends AppCompatActivity {
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.photoItem:
-                            //saveList(filenamesList);
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Photo.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.filesItem:
-                            //saveList(filenamesList);
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Files.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.homeItem:
                             return true;
                         case R.id.generalItem:
-                            //saveList(filenamesList);
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), General.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.accountItem:
-                            //saveList(filenamesList);
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Account.class));
                             overridePendingTransition(0, 0);
                             return true;
