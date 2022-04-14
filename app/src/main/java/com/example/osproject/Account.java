@@ -98,7 +98,7 @@ public class Account extends AppCompatActivity {
     }
 
     private void setAvatar(StorageReference profileRef){
-
+        GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -107,7 +107,6 @@ public class Account extends AppCompatActivity {
                     profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
                             if(googleSignInAccount != null)
                                 Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
                             else
@@ -115,14 +114,17 @@ public class Account extends AppCompatActivity {
                         }
                     });
                 }else{
-                    StorageReference Ref = FirebaseStorage.getInstance().getReference()
-                            .child("profile_avatars").child("default.jpg");
-                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            Picasso.get().load(uri).into(avatar);
-                        }
-                    });
+                    if(googleSignInAccount == null) {
+                        StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                                .child("profile_avatars").child("default.jpg");
+                        Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Picasso.get().load(uri).into(avatar);
+                            }
+                        });
+                    }else
+                        Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
                 }
             }
 

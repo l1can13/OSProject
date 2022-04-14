@@ -186,7 +186,7 @@ public class Home extends AppCompatActivity {
     }
 
     private void setAvatar(StorageReference profileRef){
-
+        GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -195,7 +195,6 @@ public class Home extends AppCompatActivity {
                     profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
                             if(googleSignInAccount != null)
                                 Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
                             else
@@ -203,14 +202,17 @@ public class Home extends AppCompatActivity {
                         }
                     });
                 }else{
-                    StorageReference Ref = FirebaseStorage.getInstance().getReference()
-                            .child("profile_avatars").child("default.jpg");
-                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            Picasso.get().load(uri).into(left_side_avatar);
-                        }
-                    });
+                    if(googleSignInAccount == null) {
+                        StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                                .child("profile_avatars").child("default.jpg");
+                        Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Picasso.get().load(uri).into(left_side_avatar);
+                            }
+                        });
+                    }else
+                        Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
                 }
             }
 
@@ -283,6 +285,7 @@ public class Home extends AppCompatActivity {
 
                 StorageReference profileRef = FirebaseStorage.getInstance().getReference()
                         .child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+
 
                 setAvatar(profileRef);
 
