@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
@@ -30,19 +32,26 @@ public class FileCustom {
     private Calendar uploadDate;
     private Uri uri;
     private boolean flag;
+    private FirebaseAuth fbAuth;
 
-    public FileCustom(Uri uri, Context context) {
+    public FileCustom(Uri uri, Context context, FirebaseAuth fbAuth) {
         this.context = context;
         this.uri = uri;
+        this.fbAuth = fbAuth;
         this.filename = getFileName();
         this.size = getFileSize();
         this.uploadDate = Calendar.getInstance();
     }
 
-    public FileCustom(String filename, Context context) {
+    public FileCustom(String filename, Context context, FirebaseAuth fbAuth) {
         this.context = context;
         this.filename = filename;
+        this.fbAuth = fbAuth;
         this.uploadDate = Calendar.getInstance();
+    }
+
+    private void setFbAuth(FirebaseAuth fbAuth) {
+        this.fbAuth = fbAuth;
     }
 
     public boolean getFlag(){
@@ -70,7 +79,7 @@ public class FileCustom {
         return name;
     }
 
-    public void upload() {
+    private boolean checkIfDirectoryExists(String path) {
         FTPClient client = new FTPClient();
         client.setControlEncoding("UTF-8");
         try {
@@ -78,10 +87,36 @@ public class FileCustom {
             client.connect("backup-storage5.hostiman.ru");
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.enterLocalPassiveMode();
+            client.changeWorkingDirectory(path);
+            int returnCode = client.getReplyCode();
+            if (returnCode == 550) {
+                return false;
+            }
+            return true;
+        } catch (IOException ex) {
+            this.flag = false;
+            System.out.println("ОШИБКА ПРИ ПРОВЕРКЕ ДИРЕКТОРИИ НА СУЩЕСТВОВАНИЕ!\n" + ex);
+        }
+        return false;
+    }
+
+    public void upload() {
+        FTPClient client = new FTPClient();
+        client.setControlEncoding("UTF-8");
+        try {
+//            String email = "maksimz9013@gmail.com";
+            String userId = this.fbAuth.getUid();
+            FileInputStream fInput = new FileInputStream(this.context.getContentResolver().openFileDescriptor(this.uri, "rw").getFileDescriptor());
+            client.connect("backup-storage5.hostiman.ru");
+            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+            client.enterLocalPassiveMode();
             client.setBufferSize(1048576);
             System.out.println("РАЗМЕР БУФЕРА = " + client.getBufferSize());
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.storeFile(this.filename, fInput);
+            if(!checkIfDirectoryExists(userId)) {
+                client.makeDirectory(userId);
+            }
+            client.storeFile(userId + "/" + this.filename, fInput);
             client.logout();
             client.disconnect();
             fInput.close();
@@ -103,7 +138,7 @@ public class FileCustom {
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.retrieveFile("/" + this.filename, outputStream);
+            client.retrieveFile(fbAuth.getUid()+ "/" + this.filename, outputStream);
             client.logout();
             client.disconnect();
             outputStream.close();
@@ -124,7 +159,7 @@ public class FileCustom {
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.retrieveFile("/" + this.filename, outputStream);
+            client.retrieveFile(fbAuth.getUid() + "/" + this.filename, outputStream);
             client.logout();
             client.disconnect();
             outputStream.close();
@@ -153,7 +188,7 @@ public class FileCustom {
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.deleteFile(this.filename);
+            client.deleteFile(fbAuth.getUid()+ "/" + this.filename);
             client.logout();
             client.disconnect();
             System.out.println("ФАЙЛ УДАЛЁН!");
