@@ -41,4 +41,6 @@
     <string name="addFileButton">addFileButton</string>
     <string name="enterEmail">Введите почту, к которой привязан аккаунт:</string>
     <string name="register">Зарегистрироваться</string>
+    <string name="delete">Delete</string>
+    <string name="selectAll">Select all</string>
 </resources>
