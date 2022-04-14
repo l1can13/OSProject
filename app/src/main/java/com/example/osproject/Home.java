@@ -178,6 +178,7 @@ public class Home extends AppCompatActivity {
                     filenamesList.add(file.getName());
                     recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
                     recyclerView.scrollToPosition(filenamesList.size() - 1);
+                    recyclerView.setAdapter(recyclerViewAdapter);
                     saveList(filenamesList);
                 }
             } else {
@@ -376,24 +377,24 @@ public class Home extends AppCompatActivity {
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.photoItem:
-                            //saveList(filenamesList);
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Photo.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.filesItem:
-                            //saveList(filenamesList);
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Files.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.homeItem:
                             return true;
                         case R.id.generalItem:
-                            //saveList(filenamesList);
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), General.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.accountItem:
-                            //saveList(filenamesList);
+                            saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Account.class));
                             overridePendingTransition(0, 0);
                             return true;
