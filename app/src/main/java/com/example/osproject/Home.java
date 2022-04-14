@@ -55,6 +55,7 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -87,6 +88,12 @@ public class Home extends AppCompatActivity {
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";
+
+    private boolean file_exist_flag;
+
+    private void setFlag(boolean flag){
+        file_exist_flag = flag;
+    }
 
     public void showFileChooser() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -178,6 +185,42 @@ public class Home extends AppCompatActivity {
         }
     }
 
+    private void setAvatar(StorageReference profileRef){
+
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
+                            if(googleSignInAccount != null)
+                                Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
+                            else
+                                Picasso.get().load(uri).into(left_side_avatar);
+                        }
+                    });
+                }else{
+                    StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                            .child("profile_avatars").child("default.jpg");
+                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).into(left_side_avatar);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
 
     @Override
     protected void onDestroy() {
@@ -237,35 +280,11 @@ public class Home extends AppCompatActivity {
 
                     }
                 });
+
                 StorageReference profileRef = FirebaseStorage.getInstance().getReference()
                         .child("profile_avatars").child(fbAuth.getUid() + ".jpg");
 
-                profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        Picasso.get().load(uri).into(left_side_avatar);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
-                        if (googleSignInAccount != null) {
-                            Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
-                        }
-                        else{
-                            StorageReference Ref = FirebaseStorage.getInstance().getReference()
-                                    .child("profile_avatars").child("default.jpg");
-                            System.out.println("LISTALL: "+Ref.listAll());
-
-                            Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    Picasso.get().load(uri).into(left_side_avatar);
-                                }
-                            });
-                        }
-                    }
-                });
+                setAvatar(profileRef);
 
                 recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
