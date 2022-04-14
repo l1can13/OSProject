@@ -98,7 +98,6 @@ public class Account extends AppCompatActivity {
     }
 
     private void setAvatar(StorageReference profileRef){
-        GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -107,13 +106,11 @@ public class Account extends AppCompatActivity {
                     profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            if(googleSignInAccount != null)
-                                Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
-                            else
-                                Picasso.get().load(uri).into(avatar);
+                            Picasso.get().load(uri).into(avatar);
                         }
                     });
                 }else{
+                    GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
                     if(googleSignInAccount == null) {
                         StorageReference Ref = FirebaseStorage.getInstance().getReference()
                                 .child("profile_avatars").child("default.jpg");
