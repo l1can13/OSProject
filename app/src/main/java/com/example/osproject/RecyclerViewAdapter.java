@@ -52,6 +52,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 });
                 thread.start();
                 filenamesList.remove(buf);
+                notifyDataSetChanged();
                 return true;
             }
         });
