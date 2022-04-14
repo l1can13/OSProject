@@ -9,13 +9,26 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
@@ -27,7 +40,56 @@ public class Login extends AppCompatActivity {
     private TextView email;
     private TextView password;
     private TextView forgotPassword;
+    private TextView backOnRegistration;
+
+    private DatabaseReference dbReference;
+
     private SignInButton googleSignInButton;
+    private GoogleSignInClient googleSignInClient;
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 1){
+            Task<GoogleSignInAccount> googleSignInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try{
+                GoogleSignInAccount googleSignInAccount = googleSignInAccountTask.getResult(ApiException.class);
+                fbAuthWithGoogle(googleSignInAccount);
+            }catch (Exception e){
+
+            }
+        }
+    }
+
+    private void fbAuthWithGoogle(GoogleSignInAccount googleSignInAccount) {
+        AuthCredential authCredential = GoogleAuthProvider.getCredential(googleSignInAccount.getIdToken(), null);
+        fbAuthLogin.signInWithCredential(authCredential)
+                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                    @Override
+                    public void onSuccess(AuthResult authResult) {
+
+                        FirebaseUser FBUser = fbAuthLogin.getCurrentUser();
+                        FireBaseUser user = new FireBaseUser(FBUser.getDisplayName(), FBUser.getEmail(), FBUser.getPhoneNumber());
+                        dbReference.child("User_Info").child(fbAuthLogin.getUid()).setValue(user);
+
+
+                        SharedPreferences.Editor prefsEditor = login_sender.edit();
+
+                        String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuthLogin);
+                        prefsEditor.putString("fbAuth", json);
+                        prefsEditor.apply();
+
+                        startActivity(new Intent(Login.this, Home.class));
+                        finish();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(Login.this, "Что-то пошло не так. Попробуйте снова.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +102,29 @@ public class Login extends AppCompatActivity {
         email = findViewById(R.id.username);
         forgotPassword = findViewById(R.id.forgotPassword);
         login_sender = getPreferences(MODE_PRIVATE);
-        googleSignInButton = findViewById(R.id.googleSignIn);
+        backOnRegistration = findViewById(R.id.backOnRegistration);
 
+        dbReference = FirebaseDatabase.getInstance().getReference();
+
+        googleSignInButton = findViewById(R.id.googleSignIn);
         googleSignInButton.setSize(SignInButton.SIZE_STANDARD);
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        googleSignInClient = GoogleSignIn.getClient(Login.this, gso);
+
+        googleSignInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent intent = googleSignInClient.getSignInIntent();
+
+                startActivityForResult(intent,1);
+            }
+        });
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,6 +158,14 @@ public class Login extends AppCompatActivity {
                         }
                     }
                 });
+            }
+        });
+
+        backOnRegistration.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(Login.this,Registration.class));
+                finish();
             }
         });
 

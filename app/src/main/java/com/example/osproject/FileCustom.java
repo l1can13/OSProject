@@ -29,6 +29,7 @@ public class FileCustom {
     private double size;
     private Calendar uploadDate;
     private Uri uri;
+    private boolean flag;
 
     public FileCustom(Uri uri, Context context) {
         this.context = context;
@@ -42,6 +43,10 @@ public class FileCustom {
         this.context = context;
         this.filename = filename;
         this.uploadDate = Calendar.getInstance();
+    }
+
+    public boolean getFlag(){
+        return this.flag;
     }
 
     private double getFileSize() {
@@ -80,8 +85,10 @@ public class FileCustom {
             client.logout();
             client.disconnect();
             fInput.close();
+            this.flag = true;
             System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
         } catch (IOException ex) {
+            this.flag = false;
             System.out.println("ОШИБКА ПРИ ВЫГРУЗКЕ ФАЙЛА НА СЕРВЕР!\n" + ex);
         }
     }

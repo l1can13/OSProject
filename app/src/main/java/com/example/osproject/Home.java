@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,6 +32,10 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -42,11 +47,19 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
+import com.squareup.picasso.Picasso;
 
+import org.apache.commons.net.ftp.FTPClient;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class Home extends AppCompatActivity {
 
@@ -62,6 +75,11 @@ public class Home extends AppCompatActivity {
     private NotificationManager notificationManager;
     private RecyclerView recyclerView;
 
+    /*Элементы для бокового меню*/
+    private TextView left_side_username;
+    private TextView left_side_email;
+    private CircleImageView left_side_avatar;
+
     /* Shared Preferences */
     private SharedPreferences fb_SharedPreference_settings;
     private List<String> filenamesList = new LinkedList<>();
@@ -69,6 +87,9 @@ public class Home extends AppCompatActivity {
     /* FireBase */
     private FirebaseAuth fbAuth;
     private DatabaseReference dbReference;
+    private StorageReference storageReference;
+
+    FTPClient client;
 
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
@@ -90,11 +111,10 @@ public class Home extends AppCompatActivity {
     private void saveList(List<String> list) {
         try {
             dbReference.child("User_Data").child(fbAuth.getUid()).setValue(list);
-        } catch(Exception e) {
+        } catch (Exception e) {
             System.out.println("ОШИБКА ПРИ СОХРАНЕНИИ СПИСКА ИМЕН ФАЙЛОВ!");
         }
     }
-
 
 
     @SuppressLint("NotifyDataSetChanged")
@@ -125,6 +145,16 @@ public class Home extends AppCompatActivity {
         return arrayItems;
     }
 
+    private boolean isFileDuplicate(FileCustom file) {
+        for (int i = 0; i < filenamesList.size(); ++i) {
+            if (filenamesList.get(i).equals(file.getName())) {
+                return true;
+            }
+
+        }
+        return false;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent result) {
         super.onActivityResult(requestCode, resultCode, result);
@@ -139,12 +169,34 @@ public class Home extends AppCompatActivity {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    file.upload(fbAuth);
+                    file.upload();
+                    if (!isFileDuplicate(file)) {
+                        Thread thread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                file.upload();
+                            }
+                        });
+                        thread.start();
+                        try {
+                            thread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if (file.getFlag()) {
+                            filenamesList.add(file.getName());
+                            recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
+                            recyclerView.scrollToPosition(filenamesList.size() - 1);
+                            saveList(filenamesList);
+                        }
+                    } else {
+                        Toast.makeText(Home.this, "Такой файл уже есть в вашем хранилище!", Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
-            thread.start();
         }
     }
+
 
     @Override
     protected void onDestroy() {
@@ -156,7 +208,7 @@ public class Home extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+        ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         fb_SharedPreference_settings = getPreferences(MODE_PRIVATE);
         fbAuth = FirebaseAuth.getInstance();
         if (fb_SharedPreference_settings.contains("fbAuth")) {
@@ -173,6 +225,8 @@ public class Home extends AppCompatActivity {
             dbReference = FirebaseDatabase.getInstance().getReference();
             filenamesList = loadList();
 
+            client = new FTPClient();
+
             setContentView(R.layout.activity_home);
             sideMenu = findViewById(R.id.navigationView);
             addButton = findViewById(R.id.addButton);
@@ -184,13 +238,49 @@ public class Home extends AppCompatActivity {
 
             sideMenuHeader = sideMenu.getHeaderView(0);
             backButton = sideMenuHeader.findViewById(R.id.backButton);
+
+
+            left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
+            left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
+            left_side_username = sideMenuHeader.findViewById(R.id.username);
+
+            dbReference.child("User_Info").child(fbAuth.getUid()).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    FireBaseUser user = snapshot.getValue(FireBaseUser.class);
+                    left_side_username.setText(user.getUsername());
+                    left_side_email.setText(user.getEmail());
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+            StorageReference profileRef = FirebaseStorage.getInstance().getReference()
+                    .child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+            profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Picasso.get().load(uri).into(left_side_avatar);
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
+                    if (googleSignInAccount != null) {
+                        Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
+                    }
+                }
+            });
+
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
             recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.MANAGE_EXTERNAL_STORAGE }, 1);
+                ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
             }
-            ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+            ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
 
             recyclerView.setAdapter(recyclerViewAdapter);
 
@@ -296,24 +386,24 @@ public class Home extends AppCompatActivity {
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.photoItem:
-                            saveList(filenamesList);
+                            //saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Photo.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.filesItem:
-                            saveList(filenamesList);
+                            //saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Files.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.homeItem:
                             return true;
                         case R.id.generalItem:
-                            saveList(filenamesList);
+                            //saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), General.class));
                             overridePendingTransition(0, 0);
                             return true;
                         case R.id.accountItem:
-                            saveList(filenamesList);
+                            //saveList(filenamesList);
                             startActivity(new Intent(getApplicationContext(), Account.class));
                             overridePendingTransition(0, 0);
                             return true;
