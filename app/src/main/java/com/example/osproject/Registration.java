@@ -2,6 +2,7 @@ package com.example.osproject;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -190,6 +191,14 @@ public class Registration extends AppCompatActivity {
                             FireBaseUser user = new FireBaseUser(username.getText().toString(),email.getText().toString(),phone.getText().toString());
                             dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
 
+                            StorageReference fileRef = storageReference.child("profile_avatars").child("default.jpg");
+                            fileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+                                    profileRef.putFile(uri);
+                                }
+                            });
                             SharedPreferences.Editor prefsEditor = sender.edit();
 
                             String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuth);
