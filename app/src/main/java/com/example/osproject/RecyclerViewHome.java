@@ -1,6 +1,5 @@
 package com.example.osproject;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.ActionMode;
@@ -12,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -29,11 +27,9 @@ import java.util.ArrayList;
 
 import com.google.firebase.auth.FirebaseAuth;
 
-import java.io.FileNotFoundException;
-
 import java.util.List;
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.ViewHolder> {
 
 
     Context context;
@@ -46,8 +42,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     FirebaseAuth fbAuth;
 
-
-    RecyclerViewAdapter(Context context, List<String> filenamesList, FirebaseAuth fbAuth) {
+    RecyclerViewHome(Context context, List<String> filenamesList, FirebaseAuth fbAuth) {
         this.context = context;
         this.filenamesList = filenamesList;
         this.fbAuth = fbAuth;
@@ -55,15 +50,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     @NonNull
     @Override
-    public RecyclerViewAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.activity_recycler_view, parent, false);
+    public RecyclerViewHome.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.activity_recycler_view_home, parent, false);
         mainViewModel = ViewModelProviders.of((FragmentActivity) context)
                 .get(MainViewModel.class);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerViewAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerViewHome.ViewHolder holder, int position) {
         String buf = filenamesList.get(position);
 
         StringBuilder typeOfFile = new StringBuilder("");
