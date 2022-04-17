@@ -89,12 +89,6 @@ public class Home extends AppCompatActivity {
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";
 
-    private boolean file_exist_flag;
-
-    private void setFlag(boolean flag){
-        file_exist_flag = flag;
-    }
-
     public void showFileChooser() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
@@ -265,6 +259,7 @@ public class Home extends AppCompatActivity {
                 left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
                 left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
                 left_side_username = sideMenuHeader.findViewById(R.id.username);
+
 
                 dbReference.child("User_Info").child(fbAuth.getUid()).addValueEventListener(new ValueEventListener() {
                     @Override
