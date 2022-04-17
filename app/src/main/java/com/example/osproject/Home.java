@@ -34,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -55,14 +54,13 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class Home extends AppCompatActivity {
 
     /* Элементы из xml файлов */
-    private RecyclerViewAdapter recyclerViewAdapter;
+    private RecyclerViewHome recyclerViewAdapter;
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
     private ImageButton menuButton;
@@ -72,6 +70,7 @@ public class Home extends AppCompatActivity {
     private View sideMenuHeader;
     private NotificationManager notificationManager;
     private RecyclerView recyclerView;
+
     /*Элементы для бокового меню*/
     private TextView left_side_username;
     private TextView left_side_email;
@@ -255,7 +254,6 @@ public class Home extends AppCompatActivity {
                 sideMenuHeader = sideMenu.getHeaderView(0);
                 backButton = sideMenuHeader.findViewById(R.id.backButton);
 
-
                 left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
                 left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
                 left_side_username = sideMenuHeader.findViewById(R.id.username);
@@ -283,7 +281,7 @@ public class Home extends AppCompatActivity {
 
                 recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-                recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList,fbAuth);
+                recyclerViewAdapter = new RecyclerViewHome(this, filenamesList,fbAuth);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
                 }
@@ -318,8 +316,10 @@ public class Home extends AppCompatActivity {
                     @Override
                     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                         switch (item.getItemId()) {
-                            case R.id.settings:
-                                Toast.makeText(getApplicationContext(), "settings", Toast.LENGTH_SHORT).show();
+                            case R.id.savedUsers:
+                                saveList(filenamesList);
+                                startActivity(new Intent(getApplicationContext(), SavedUsers.class));
+                                overridePendingTransition(0, 0);
                                 return true;
                             case R.id.notifications:
                                 Dialog dialog;
@@ -393,12 +393,15 @@ public class Home extends AppCompatActivity {
                     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                         switch (item.getItemId()) {
                             case R.id.homeItem:
+                                saveList(filenamesList);
                                 return true;
                             case R.id.generalItem:
+                                saveList(filenamesList);
                                 startActivity(new Intent(getApplicationContext(), General.class));
                                 overridePendingTransition(0, 0);
                                 return true;
                             case R.id.accountItem:
+                                saveList(filenamesList);
                                 startActivity(new Intent(getApplicationContext(), Account.class));
                                 overridePendingTransition(0, 0);
                                 return true;

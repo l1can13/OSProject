@@ -95,8 +95,9 @@ public class General extends AppCompatActivity {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.settings:
-                        Toast.makeText(getApplicationContext(), "settings", Toast.LENGTH_SHORT).show();
+                    case R.id.savedUsers:
+                        startActivity(new Intent(getApplicationContext(), SavedUsers.class));
+                        overridePendingTransition(0, 0);
                         return true;
                     case R.id.notifications:
                         Dialog dialog;
