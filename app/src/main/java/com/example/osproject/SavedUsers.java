@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class SavedUsers extends AppCompatActivity {
@@ -21,7 +22,7 @@ public class SavedUsers extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RecyclerViewSavedUsers recyclerViewAdapter;
     private FloatingActionButton addButton;
-    private List<String> savedUsers;
+    private List<String> savedUsers = new LinkedList<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
