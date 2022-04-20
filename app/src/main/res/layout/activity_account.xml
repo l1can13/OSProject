@@ -77,27 +77,39 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/darkMode"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_below="@id/user"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?android:attr/selectableItemBackground"
-        android:gravity="center_vertical">
+<!--    <LinearLayout-->
+<!--        android:id="@+id/darkMode"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="50dp"-->
+<!--        android:layout_below="@id/user"-->
+<!--        android:clickable="true"-->
+<!--        android:focusable="true"-->
+<!--        android:foreground="?android:attr/selectableItemBackground"-->
+<!--        android:gravity="center_vertical">-->
+<!--        -->
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_vertical"-->
+<!--            android:layout_marginStart="20dp"-->
+<!--            android:fontFamily="@font/el_messiri"-->
+<!--            android:text="@string/darkMode"-->
+<!--            android:textColor="@color/black"-->
+<!--            android:textSize="18sp" />-->
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/darkMode"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
             android:layout_marginStart="20dp"
-            android:fontFamily="@font/el_messiri"
             android:text="@string/darkMode"
+            android:fontFamily="@font/el_messiri"
             android:textColor="@color/black"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            android:layout_below="@id/user"
+            android:checked="false"/>
 
-    </LinearLayout>
+    <!--    </LinearLayout>-->
 
     <LinearLayout
         android:id="@+id/feedback"

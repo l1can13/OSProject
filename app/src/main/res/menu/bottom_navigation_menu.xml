@@ -1,25 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item
-        android:id="@+id/photoItem"
-        android:icon="@drawable/photo"
-        android:title="@string/photoTitle" />
-
-    <item
-        android:id="@+id/filesItem"
-        android:icon="@drawable/folders"
-        android:title="@string/filesTitle" />
+        android:id="@+id/generalItem"
+        android:icon="@drawable/general"
+        android:title="@string/generalTitle" />
 
     <item
         android:id="@+id/homeItem"
         android:icon="@drawable/home"
         android:title="@string/homeTitle"/>
-
-    <item
-        android:id="@+id/generalItem"
-        android:icon="@drawable/general"
-        android:title="@string/generalTitle" />
 
     <item
         android:id="@+id/accountItem"

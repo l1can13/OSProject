@@ -44,6 +44,7 @@
             android:layout_width="230dp"
             android:layout_height="40dp"
             android:layout_marginTop="10dp"
+            android:inputType="textPassword"
             android:background="@drawable/border_login"
             android:fontFamily="@font/el_messiri"
             android:hint="@string/password"

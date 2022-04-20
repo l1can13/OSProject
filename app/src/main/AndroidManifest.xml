@@ -34,13 +34,10 @@
             android:name=".Account"
             android:exported="true" />
         <activity
-            android:name=".Files"
-            android:exported="true" />
-        <activity
-            android:name=".Photo"
-            android:exported="true" />
-        <activity
             android:name=".General"
+            android:exported="true" />
+        <activity
+            android:name=".SavedUsers"
             android:exported="true" />
         <activity
             android:name=".Home"

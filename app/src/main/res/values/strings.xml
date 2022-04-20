@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">OSProject</string>
     <string name="account">Аккаунт</string>
+    <string name="users">Пользователи</string>
     <string name="name">Имя</string>
     <string name="emailExample">emailexample@gmail.com</string>
     <string name="darkMode">Темный режим</string>
@@ -15,7 +16,7 @@
     <string name="generalTitle">Общее</string>
     <string name="accountTitle">Аккаунт</string>
     <string name="search">Поиск по названию</string>
-    <string name="settings">Настройки</string>
+    <string name="savedUsers">Сохраненные пользователи</string>
     <string name="notifications">Уведомления</string>
     <string name="trash">Корзина</string>
     <string name="sort">Сортировка</string>
@@ -41,4 +42,6 @@
     <string name="addFileButton">addFileButton</string>
     <string name="enterEmail">Введите почту, к которой привязан аккаунт:</string>
     <string name="register">Зарегистрироваться</string>
+    <string name="delete">Delete</string>
+    <string name="selectAll">Select all</string>
 </resources>

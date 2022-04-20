@@ -2,17 +2,23 @@ package com.example.osproject;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.SwitchCompat;
 
 import android.annotation.SuppressLint;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.MenuItem;
 
 import android.view.View;
 
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -22,29 +28,41 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import com.squareup.picasso.Picasso;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.StandardOpenOption;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class Account extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigationView;
-    private LinearLayout darkMode;
     private LinearLayout sendFeedback;
     private RelativeLayout version;
     private LinearLayout clearCache;
@@ -60,6 +78,9 @@ public class Account extends AppCompatActivity {
     private TextView username;
     private TextView userEmail;
 
+//    darkMode
+    SwitchCompat switchCompat;
+    SharedPreferences sharedPreferences = null;
 
     public void showFileChooser() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -81,8 +102,46 @@ public class Account extends AppCompatActivity {
         }
     }
 
+    private void setAvatar(StorageReference profileRef){
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).into(avatar);
+                        }
+                    });
+                }else{
+                    GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
+                    if(googleSignInAccount == null) {
+                        StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                                .child("profile_avatars").child("default.jpg");
+                        Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Picasso.get().load(uri).into(avatar);
+                            }
+                        });
+                    }else
+                        Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
     private void uploadImageToFirebase(Uri ImageUri) {
         StorageReference fileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar");
+        dbRef.child(fbAuth.getUid()).setValue(fbAuth.getUid()+".jpg");
 
         fileRef.putFile(ImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -107,6 +166,34 @@ public class Account extends AppCompatActivity {
         accountPref = getPreferences(MODE_PRIVATE);
 
         logout_button = findViewById(R.id.logout);
+
+        switchCompat = findViewById(R.id.darkMode);
+        sharedPreferences = getSharedPreferences("night", 0);
+        Boolean darkModeBool = sharedPreferences.getBoolean("night_mode", false);
+        if (darkModeBool) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            switchCompat.setChecked(true);
+        }
+
+        switchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b){
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                    switchCompat.setChecked(true);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("night_mode", true);
+                    editor.commit();
+                }
+                else{
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                    switchCompat.setChecked(false);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("night_mode", false);
+                    editor.commit();
+                }
+            }
+        });
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -137,31 +224,16 @@ public class Account extends AppCompatActivity {
             }
         });
 
-
         avatar = findViewById(R.id.userAvatar);
 
         StorageReference profileRef = storageReference.child("profile_avatars").child(fbAuth.getUid() + ".jpg");
 
-        profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-            @Override
-            public void onSuccess(Uri uri) {
-                Picasso.get().load(uri).into(avatar);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Account.this);
-                if (googleSignInAccount != null) {
-                    Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(avatar);
-                }
-            }
-        });
+        setAvatar(profileRef);
+
         bottomNavigationView = findViewById(R.id.bottomMenu);
-        darkMode = findViewById(R.id.darkMode);
         sendFeedback = findViewById(R.id.feedback);
         version = findViewById(R.id.version);
         clearCache = findViewById(R.id.clearCache);
-
 
         logout_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -194,19 +266,12 @@ public class Account extends AppCompatActivity {
             }
         });
 
+
         bottomNavigationView.setSelectedItemId(R.id.accountItem);
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.photoItem:
-                        startActivity(new Intent(getApplicationContext(), Photo.class));
-                        overridePendingTransition(0, 0);
-                        return true;
-                    case R.id.filesItem:
-                        startActivity(new Intent(getApplicationContext(), Files.class));
-                        overridePendingTransition(0, 0);
-                        return true;
                     case R.id.homeItem:
                         startActivity(new Intent(getApplicationContext(), Home.class));
                         overridePendingTransition(0, 0);

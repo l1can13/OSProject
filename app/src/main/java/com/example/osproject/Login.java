@@ -51,12 +51,12 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == 1){
+        if (requestCode == 1) {
             Task<GoogleSignInAccount> googleSignInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try{
+            try {
                 GoogleSignInAccount googleSignInAccount = googleSignInAccountTask.getResult(ApiException.class);
                 fbAuthWithGoogle(googleSignInAccount);
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
         }
@@ -99,7 +99,7 @@ public class Login extends AppCompatActivity {
         loginButton = findViewById(R.id.loginButton);
         fbAuthLogin = FirebaseAuth.getInstance();
         password = findViewById(R.id.password);
-        email = findViewById(R.id.username);
+        email = findViewById(R.id.email);
         forgotPassword = findViewById(R.id.forgotPassword);
         login_sender = getPreferences(MODE_PRIVATE);
         backOnRegistration = findViewById(R.id.backOnRegistration);
@@ -122,49 +122,49 @@ public class Login extends AppCompatActivity {
 
                 Intent intent = googleSignInClient.getSignInIntent();
 
-                startActivityForResult(intent,1);
+                startActivityForResult(intent, 1);
             }
         });
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(email.getText().toString().isEmpty()){
+                if (email.getText().toString().isEmpty()) {
                     Toast.makeText(getApplicationContext(), "Введите email!", Toast.LENGTH_SHORT).show();
                     email.setText("");
                     return;
                 }
-                if(password.getText().toString().length() < 10){
+                if (password.getText().toString().length() < 10) {
                     Toast.makeText(Login.this, "Введите корректный пароль!", Toast.LENGTH_SHORT).show();
                     password.setText("");
                     return;
                 }
-                fbAuthLogin.signInWithEmailAndPassword(email.getText().toString(),password.getText().toString())
-                .addOnCompleteListener(Login.this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(!task.isSuccessful()){
-                            password.setText("");
-                            email.setText("");
-                            Toast.makeText(Login.this, "Некорректные данные!\nПопробуйте еще!", Toast.LENGTH_SHORT).show();
-                        }else{
-                            SharedPreferences.Editor prefsEditor = login_sender.edit();
+                fbAuthLogin.signInWithEmailAndPassword(email.getText().toString(), password.getText().toString())
+                        .addOnCompleteListener(Login.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (!task.isSuccessful()) {
+                                    password.setText("");
+                                    email.setText("");
+                                    Toast.makeText(Login.this, "Некорректные данные!\nПопробуйте еще!", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    SharedPreferences.Editor prefsEditor = login_sender.edit();
 
-                            String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuthLogin);
-                            prefsEditor.putString("fbAuth", json);
-                            prefsEditor.apply();
-                            startActivity(new Intent(Login.this, Home.class));
-                            finish();
-                        }
-                    }
-                });
+                                    String json = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(fbAuthLogin);
+                                    prefsEditor.putString("fbAuth", json);
+                                    prefsEditor.apply();
+                                    startActivity(new Intent(Login.this, Home.class));
+                                    finish();
+                                }
+                            }
+                        });
             }
         });
 
         backOnRegistration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(Login.this,Registration.class));
+                startActivity(new Intent(Login.this, Registration.class));
                 finish();
             }
         });
@@ -172,7 +172,7 @@ public class Login extends AppCompatActivity {
         forgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(Login.this,ForgotPassword.class));
+                startActivity(new Intent(Login.this, ForgotPassword.class));
                 finish();
             }
         });

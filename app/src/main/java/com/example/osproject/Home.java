@@ -34,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -52,9 +51,6 @@ import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
-import org.apache.commons.net.ftp.FTPClient;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,7 +60,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class Home extends AppCompatActivity {
 
     /* Элементы из xml файлов */
-    private RecyclerViewAdapter recyclerViewAdapter;
+    private RecyclerViewHome recyclerViewAdapter;
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
     private ImageButton menuButton;
@@ -88,9 +84,6 @@ public class Home extends AppCompatActivity {
     /* FireBase */
     private FirebaseAuth fbAuth;
     private DatabaseReference dbReference;
-    private StorageReference storageReference;
-
-    FTPClient client;
 
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
@@ -118,11 +111,10 @@ public class Home extends AppCompatActivity {
     private void saveList(List<String> list) {
         try {
             dbReference.child("User_Data").child(fbAuth.getUid()).setValue(list);
-        } catch (Exception e) {
+        } catch(Exception e) {
             System.out.println("ОШИБКА ПРИ СОХРАНЕНИИ СПИСКА ИМЕН ФАЙЛОВ!");
         }
     }
-
 
     @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -152,12 +144,11 @@ public class Home extends AppCompatActivity {
         return arrayItems;
     }
 
-    private boolean isFileDuplicate(FileCustom file) {
-        for (int i = 0; i < filenamesList.size(); ++i) {
-            if (filenamesList.get(i).equals(file.getName())) {
+    private boolean isFileDuplicate(FileCustom file){
+        for(int i = 0; i < filenamesList.size(); ++i){
+            if(filenamesList.get(i).equals(file.getName())){
                 return true;
             }
-
         }
         return false;
     }
@@ -168,7 +159,7 @@ public class Home extends AppCompatActivity {
 
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
-            FileCustom file = new FileCustom(uri, getApplicationContext(), fbAuth);
+            FileCustom file = new FileCustom(uri, getApplicationContext(),fbAuth);
             if (!isFileDuplicate(file)) {
                 Thread thread = new Thread(new Runnable() {
                     @Override
@@ -194,6 +185,41 @@ public class Home extends AppCompatActivity {
         }
     }
 
+    private void setAvatar(StorageReference profileRef){
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).into(left_side_avatar);
+                        }
+                    });
+                }else{
+                    GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
+                    if(googleSignInAccount == null) {
+                        StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                                .child("profile_avatars").child("default.jpg");
+                        Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Picasso.get().load(uri).into(left_side_avatar);
+                            }
+                        });
+                    }else
+                        Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
 
     @Override
     protected void onDestroy() {
@@ -205,7 +231,7 @@ public class Home extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
         fb_SharedPreference_settings = getPreferences(MODE_PRIVATE);
         fbAuth = FirebaseAuth.getInstance();
         if (fb_SharedPreference_settings.contains("fbAuth")) {
@@ -219,196 +245,221 @@ public class Home extends AppCompatActivity {
         if (fbUser == null) {
             startActivity(new Intent(this, Registration.class));
         } else {
-            dbReference = FirebaseDatabase.getInstance().getReference();
-            filenamesList = loadList();
+            if (fbUser.isEmailVerified()) {
+                dbReference = FirebaseDatabase.getInstance().getReference();
+                filenamesList = loadList();
 
-            client = new FTPClient();
+                setContentView(R.layout.activity_home);
+                sideMenu = findViewById(R.id.navigationView);
+                addButton = findViewById(R.id.addButton);
+                menuButton = findViewById(R.id.menu);
+                drawerLayout = findViewById(R.id.drawerLayout);
+                bottomNavigationView = findViewById(R.id.bottomMenu);
+                recyclerView = findViewById(R.id.recyclerView);
+                notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
-            setContentView(R.layout.activity_home);
-            sideMenu = findViewById(R.id.navigationView);
-            addButton = findViewById(R.id.addButton);
-            menuButton = findViewById(R.id.menu);
-            drawerLayout = findViewById(R.id.drawerLayout);
-            bottomNavigationView = findViewById(R.id.bottomMenu);
-            recyclerView = findViewById(R.id.recyclerView);
-            notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                sideMenuHeader = sideMenu.getHeaderView(0);
+                backButton = sideMenuHeader.findViewById(R.id.backButton);
 
-            sideMenuHeader = sideMenu.getHeaderView(0);
-            backButton = sideMenuHeader.findViewById(R.id.backButton);
+                left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
+                left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
+                left_side_username = sideMenuHeader.findViewById(R.id.username);
 
 
-            left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
-            left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
-            left_side_username = sideMenuHeader.findViewById(R.id.username);
-
-            dbReference.child("User_Info").child(fbAuth.getUid()).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    FireBaseUser user = snapshot.getValue(FireBaseUser.class);
-                    left_side_username.setText(user.getUsername());
-                    left_side_email.setText(user.getEmail());
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-            StorageReference profileRef = FirebaseStorage.getInstance().getReference()
-                    .child("profile_avatars").child(fbAuth.getUid() + ".jpg");
-            profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                @Override
-                public void onSuccess(Uri uri) {
-                    Picasso.get().load(uri).into(left_side_avatar);
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
-                    if (googleSignInAccount != null) {
-                        Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
+                dbReference.child("User_Info").child(fbAuth.getUid()).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        FireBaseUser user = snapshot.getValue(FireBaseUser.class);
+                        left_side_username.setText(user.getUsername());
+                        left_side_email.setText(user.getEmail());
                     }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+                StorageReference profileRef = FirebaseStorage.getInstance().getReference()
+                        .child("profile_avatars").child(fbAuth.getUid() + ".jpg");
+
+
+                setAvatar(profileRef);
+
+                recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+                recyclerViewAdapter = new RecyclerViewHome(this, filenamesList,fbAuth);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
                 }
-            });
+                ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
 
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+                recyclerView.setAdapter(recyclerViewAdapter);
 
-            recyclerViewAdapter = new RecyclerViewAdapter(this, filenamesList, fbAuth);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
-            }
-            ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                bottomNavigationView.setSelectedItemId(R.id.homeItem);
 
-            recyclerView.setAdapter(recyclerViewAdapter);
+                addButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        showFileChooser();
+                    }
+                });
 
-            bottomNavigationView.setSelectedItemId(R.id.homeItem);
+                backButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        drawerLayout.close();
+                    }
+                });
 
-            addButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    showFileChooser();
-                }
-            });
+                menuButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        drawerLayout.openDrawer(GravityCompat.START);
+                    }
+                });
 
-            backButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    drawerLayout.close();
-                }
-            });
+                sideMenu.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.savedUsers:
+                                saveList(filenamesList);
+                                startActivity(new Intent(getApplicationContext(), SavedUsers.class));
+                                overridePendingTransition(0, 0);
+                                return true;
+                            case R.id.notifications:
+                                Dialog dialog;
 
-            menuButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    drawerLayout.openDrawer(GravityCompat.START);
-                }
-            });
+                                final String[] items = {" Изменение общих файлов", " Обновления приложения", " Приглашение в команду"};
+                                final ArrayList itemsSelected = new ArrayList();
 
-            sideMenu.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-                @Override
-                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.settings:
-                            Toast.makeText(getApplicationContext(), "settings", Toast.LENGTH_SHORT).show();
-                            return true;
-                        case R.id.notifications:
-                            Dialog dialog;
+                                AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
+                                builder.setTitle("Уведомления : ");
+                                builder.setMultiChoiceItems(items, null,
+                                        new DialogInterface.OnMultiChoiceClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int selectedItemId,
+                                                                boolean isSelected) {
+                                                if (isSelected) {
+                                                    itemsSelected.add(selectedItemId);
+                                                } else if (itemsSelected.contains(selectedItemId)) {
 
-                            final String[] items = {" Изменение общих файлов", " Обновления приложения", " Приглашение в команду"};
-                            final ArrayList itemsSelected = new ArrayList();
-
-                            AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
-                            builder.setTitle("Уведомления : ");
-                            builder.setMultiChoiceItems(items, null,
-                                    new DialogInterface.OnMultiChoiceClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int selectedItemId,
-                                                            boolean isSelected) {
-                                            if (isSelected) {
-                                                itemsSelected.add(selectedItemId);
-                                            } else if (itemsSelected.contains(selectedItemId)) {
-
-                                                itemsSelected.remove(Integer.valueOf(selectedItemId));
+                                                    itemsSelected.remove(Integer.valueOf(selectedItemId));
+                                                }
                                             }
-                                        }
-                                    })
-                                    .setPositiveButton("Ок", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int id) {
+                                        })
+                                        .setPositiveButton("Ок", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int id) {
 
-                                        }
-                                    })
-                                    .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int id) {
+                                            }
+                                        })
+                                        .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int id) {
 
-                                        }
-                                    });
+                                            }
+                                        });
 
-                            dialog = builder.create();
-                            dialog.show();
+                                dialog = builder.create();
+                                dialog.show();
 
-                            Intent intent = new Intent(getApplicationContext(), Home.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                            NotificationCompat.Builder notificationBuilder =
-                                    new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                            .setSmallIcon(R.drawable.ic_launcher_foreground)
-                                            .setAutoCancel(false)
-                                            .setWhen(System.currentTimeMillis())
-                                            .setContentText("Test text")
-                                            .setContentTitle("Test title")
-                                            .setPriority(PRIORITY_HIGH);
+                                Intent intent = new Intent(getApplicationContext(), Home.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                NotificationCompat.Builder notificationBuilder =
+                                        new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                                                .setAutoCancel(false)
+                                                .setWhen(System.currentTimeMillis())
+                                                .setContentText("Test text")
+                                                .setContentTitle("Test title")
+                                                .setPriority(PRIORITY_HIGH);
 
-                            createChannelIfNeeded(notificationManager);
-                            notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
-                            return true;
-                        case R.id.trash:
-                            Toast.makeText(getApplicationContext(), "trash", Toast.LENGTH_SHORT).show();
-                            return true;
+                                createChannelIfNeeded(notificationManager);
+                                notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
+                                return true;
+                            case R.id.trash:
+                                Toast.makeText(getApplicationContext(), "trash", Toast.LENGTH_SHORT).show();
+                                return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
 
-                public void createChannelIfNeeded(NotificationManager manager) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_ID, NotificationManager.IMPORTANCE_DEFAULT);
-                        manager.createNotificationChannel(notificationChannel);
+                    public void createChannelIfNeeded(NotificationManager manager) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_ID, NotificationManager.IMPORTANCE_DEFAULT);
+                            manager.createNotificationChannel(notificationChannel);
+                        }
                     }
-                }
-            });
+                });
 
-            bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
-                @Override
-                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.photoItem:
-                            saveList(filenamesList);
-                            startActivity(new Intent(getApplicationContext(), Photo.class));
-                            overridePendingTransition(0, 0);
-                            return true;
-                        case R.id.filesItem:
-                            saveList(filenamesList);
-                            startActivity(new Intent(getApplicationContext(), Files.class));
-                            overridePendingTransition(0, 0);
-                            return true;
-                        case R.id.homeItem:
-                            return true;
-                        case R.id.generalItem:
-                            saveList(filenamesList);
-                            startActivity(new Intent(getApplicationContext(), General.class));
-                            overridePendingTransition(0, 0);
-                            return true;
-                        case R.id.accountItem:
-                            saveList(filenamesList);
-                            startActivity(new Intent(getApplicationContext(), Account.class));
-                            overridePendingTransition(0, 0);
-                            return true;
+                bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.homeItem:
+                                saveList(filenamesList);
+                                return true;
+                            case R.id.generalItem:
+                                saveList(filenamesList);
+                                startActivity(new Intent(getApplicationContext(), General.class));
+                                overridePendingTransition(0, 0);
+                                return true;
+                            case R.id.accountItem:
+                                saveList(filenamesList);
+                                startActivity(new Intent(getApplicationContext(), Account.class));
+                                overridePendingTransition(0, 0);
+                                return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            });
+                });
+            }
+            else
+            {
+                //Высылаем подтверждение по почте
+                verifyEmail();
+            }
         }
+    }
 
+    private void verifyEmail() {
+        //Диалоговое окно
+        String UserEmail = fbAuth.getCurrentUser().getEmail();
+        AlertDialog.Builder dialog = new AlertDialog.Builder(Home.this)
+                .setTitle("Вы не авторизованы!")
+                .setMessage("Пожалуйста, подтвердите свой адрес электоронной почты " + UserEmail +"!")
+                .setPositiveButton("Отправить код еще раз", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        fbAuth.getCurrentUser().sendEmailVerification()
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void unused) {
+                                        Toast.makeText(Home.this, "Письмо с подтверждением отправлено на почту " + UserEmail, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                        startActivity(new Intent(Home.this, Home.class));
+                    }
+                }).setNegativeButton("Выйти из аккаунта", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        fbAuth.signOut();
+
+                        SharedPreferences.Editor prefsEditor = fb_SharedPreference_settings.edit();
+                        prefsEditor.remove("fbAuth");
+                        prefsEditor.apply();
+                        startActivity(new Intent(Home.this, Home.class));
+                    }
+                }).setNeutralButton("Войти", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        startActivity(new Intent(Home.this, Login.class));
+                    }
+                });
+        dialog.show();
     }
 }
+
