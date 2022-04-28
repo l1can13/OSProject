@@ -157,8 +157,11 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                                 new FileCustom(s, context, fbAuth).deleteFile();
                                             }
                                         });
+
                                         thread.start();
+
                                         filenamesList.remove(s);
+                                        home.saveList();
                                     }
                                     actionMode.finish();
                                     break;
@@ -194,7 +197,9 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                                                         typeOfFile.append(s.charAt(i));
                                                                     }
                                                                 }
-                                                                new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + typeOfFile.reverse());
+                                                                new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
+                                                                filenamesList.set(position, input.getText().toString() + "." + typeOfFile.reverse());
+                                                                home.saveList();
                                                             }
                                                         });
                                                         thread.start();
@@ -262,7 +267,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                     });
                     thread.start();
                 }else{
-                    home.PathCompare("/"+buf);
+                    home.PathCompare("/" + buf + "/");
                 }
             }
         });

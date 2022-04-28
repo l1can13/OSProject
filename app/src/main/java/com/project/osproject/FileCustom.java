@@ -99,8 +99,15 @@ public class FileCustom {
         try {
             client.connect("backup-storage5.hostiman.ru");
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
-            System.out.println(fbAuth.getUid()+FilePath);
-            String[] splitter = (fbAuth.getUid()+FilePath).split("/");
+            String[] splitter = (fbAuth.getUid() + "/" + FilePath).split("/");
+            String absPath = "";
+            for(int i = 0; i < splitter.length; ++i)
+            {
+                absPath += "/" + splitter[i];
+                if(!checkIfDirectoryExists(absPath)) {
+                    client.makeDirectory(absPath);
+                }
+            }
         }
         catch (IOException e){
             Toast.makeText(context, "Ошибка при создании папки", Toast.LENGTH_SHORT).show();
@@ -144,7 +151,21 @@ public class FileCustom {
             if(!checkIfDirectoryExists(userId)) {
                 client.makeDirectory(userId);
             }
-            client.storeFile(userId + "/" + this.filename, fInput);
+            String[] splitter = (userId + "/" + FilePath + "/").split("/");
+            String absPath = "";
+            for(int i = 0; i < splitter.length; ++i)
+            {
+                absPath += "/" + splitter[i];
+                if(!checkIfDirectoryExists(absPath)) {
+                    client.makeDirectory(absPath);
+                }
+            }
+            if(FilePath != null) {
+                client.storeFile(userId + "/" + FilePath + "/" + this.filename, fInput);
+            }
+            else{
+                client.storeFile(userId + "/" + this.filename, fInput);
+            }
             client.logout();
             client.disconnect();
             fInput.close();
@@ -166,7 +187,7 @@ public class FileCustom {
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.retrieveFile(fbAuth.getUid()+ "/" + this.filename, outputStream);
+            client.retrieveFile(fbAuth.getUid()+ "/" + FilePath + "/" + this.filename, outputStream);
             client.logout();
             client.disconnect();
             outputStream.close();
@@ -187,7 +208,12 @@ public class FileCustom {
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.retrieveFile(fbAuth.getUid() + "/" + this.filename, outputStream);
+            if(FilePath != null) {
+                client.retrieveFile(fbAuth.getUid() + "/" + FilePath + "/" + this.filename, outputStream);
+            }
+            else{
+                client.retrieveFile(fbAuth.getUid() + "/" + this.filename, outputStream);
+            }
             client.logout();
             client.disconnect();
             outputStream.close();
@@ -216,7 +242,12 @@ public class FileCustom {
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.deleteFile(fbAuth.getUid()+ "/" + this.filename);
+            if(FilePath != null) {
+                client.deleteFile(fbAuth.getUid()+ "/" + FilePath + "/" + this.filename);
+            }
+            else{
+                client.deleteFile(fbAuth.getUid()+ "/" + this.filename);
+            }
             client.logout();
             client.disconnect();
             System.out.println("ФАЙЛ УДАЛЁН!");
@@ -233,7 +264,13 @@ public class FileCustom {
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.rename(this.filename, newFileName );
+            String userId = this.fbAuth.getUid();
+            if(FilePath != null) {
+                client.rename(userId + "/" + FilePath + "/" + this.filename, userId + "/" + FilePath + "/" + newFileName);
+            }
+            else{
+                client.rename(userId + "/" + this.filename, userId + "/" + newFileName);
+            }
             client.logout();
             client.disconnect();
             System.out.println("ФАЙЛ rename!");

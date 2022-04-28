@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -35,6 +36,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -46,6 +48,7 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -58,9 +61,11 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -86,13 +91,13 @@ public class Home extends AppCompatActivity {
 
     /* Shared Preferences */
     private SharedPreferences fb_SharedPreference_settings;
-    private List<String> filenamesList = new LinkedList<>();
+    private List<String> filenamesList;
 
     /* FireBase */
     private FirebaseAuth fbAuth;
     private DatabaseReference dbReference;
     private Python python;
-    private boolean python_flag = false;
+
 
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
@@ -114,52 +119,29 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    private void saveList(List<String> list) {
 
-        python.getModule("main").callAttr("Save", "User_Data/" + fbAuth.getUid() + "/" + FilePath, filenamesList.toArray(new String[0]),python_flag);
-        python_flag = true;
-        //dbReference.child("User_Data").child(fbAuth.getUid()+FilePath).setValue(list);
+
+
+    public void saveList() {
+        python.getModule("main").callAttr("Save", "User_Data/" + fbAuth.getUid() + "/" + FilePath, filenamesList.toArray(new String[0]));
 
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     public void PathCompare(String path){
         FilePath += path;
-        //loaderList();
-        filenamesList = loadList();
-        recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this));
+        try {
+            filenamesList = new ArrayList<String>(Arrays.asList(python.getModule("main")
+                    .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/" + FilePath)
+                    .toJava(String[].class)));
+
+            recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this));
+        }catch (NullPointerException e){
+            Toast.makeText(this, "Попробуйте еще раз!", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
-    @SuppressLint({"NotifyDataSetChanged", "RestrictedApi"})
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private void loaderList() {
 
-        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid()+FilePath);
-        System.out.println("ПУТЬ: " + dbRef.getPath());
-        dbRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                filenamesList.clear();
-                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                    String data = "";
-                    if(postSnapshot.getValue() instanceof ArrayList){
-                        data = postSnapshot.getKey();
-                    }
-                    else{
-                        data = postSnapshot.getValue(String.class);
-                    }
-                    filenamesList.add(data);
-                    recyclerViewAdapter.notifyDataSetChanged();
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-    }
 
     @SuppressLint({"NotifyDataSetChanged", "RestrictedApi"})
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -181,6 +163,7 @@ public class Home extends AppCompatActivity {
                     else{
                         data = postSnapshot.getValue(String.class);
                     }
+
                     arrayItems.add(data);
                     recyclerViewAdapter.notifyDataSetChanged();
                 }
@@ -194,6 +177,7 @@ public class Home extends AppCompatActivity {
         });
         return arrayItems;
     }
+
 
     private boolean isFileDuplicate(FileCustom file){
         for(int i = 0; i < filenamesList.size(); ++i){
@@ -228,7 +212,8 @@ public class Home extends AppCompatActivity {
                     filenamesList.add(file.getName());
                     recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
                     recyclerView.scrollToPosition(filenamesList.size() - 1);
-                    saveList(filenamesList);
+                    //saveList(filenamesList);
+                    saveList();
                 }
             } else {
                 Toast.makeText(Home.this, "Такой файл уже есть в вашем хранилище!", Toast.LENGTH_SHORT).show();
@@ -275,7 +260,7 @@ public class Home extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        saveList(filenamesList);
+        saveList();
     }
 
     private void ShowOptions(){
@@ -284,7 +269,6 @@ public class Home extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         showFileChooser();
-
                     }
                 })
                 .setNegativeButton("Создать папку", new DialogInterface.OnClickListener() {
@@ -321,6 +305,8 @@ public class Home extends AppCompatActivity {
                                 }
                             });
                             thread.start();
+                            filenamesList.add(input.getText().toString()+"-folder");
+                            saveList();
                         } else {
                             Toast.makeText(Home.this, "Введите непустое название!", Toast.LENGTH_SHORT).show();
                             input.setText("");
@@ -415,8 +401,7 @@ public class Home extends AppCompatActivity {
                 addButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        //System.out.println(py.getModule("main").callAttr("Connect"));
-                        //System.out.println("ХУЙНЯ: " + obj.toString());
+
                         ShowOptions();
                     }
                 });
@@ -440,7 +425,8 @@ public class Home extends AppCompatActivity {
                     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                         switch (item.getItemId()) {
                             case R.id.savedUsers:
-                                saveList(filenamesList);
+                                //saveList(filenamesList);
+                                saveList();
                                 startActivity(new Intent(getApplicationContext(), SavedUsers.class));
                                 overridePendingTransition(0, 0);
                                 return true;
@@ -516,15 +502,18 @@ public class Home extends AppCompatActivity {
                     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                         switch (item.getItemId()) {
                             case R.id.homeItem:
-                                saveList(filenamesList);
+                                //saveList(filenamesList);
+                                saveList();
                                 return true;
                             case R.id.generalItem:
-                                saveList(filenamesList);
+                                //saveList(filenamesList);
+                                saveList();
                                 startActivity(new Intent(getApplicationContext(), General.class));
                                 overridePendingTransition(0, 0);
                                 return true;
                             case R.id.accountItem:
-                                saveList(filenamesList);
+                                //saveList(filenamesList);
+                                saveList();
                                 startActivity(new Intent(getApplicationContext(), Account.class));
                                 overridePendingTransition(0, 0);
                                 return true;
