@@ -211,7 +211,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                     });
                     thread.start();
                 }else{
-                    home.PathCompare("/"+buf);
+                    home.PathCompare("/" + buf + "/");
                 }
             }
         });
