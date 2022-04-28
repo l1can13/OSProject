@@ -1,18 +1,28 @@
 plugins {
     id 'com.android.application'
+    id 'com.chaquo.python'
 }
 
 android {
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.example.osproject"
+        applicationId 'com.project.osproject'
         minSdk 21
         targetSdk 32
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+        python{
+            buildPython "C:/Users/volce/AppData/Local/Programs/Python/Python310/python.exe"
+            pip{
+                install "firebase_admin"
+            }
+        }
     }
 
     buildTypes {
@@ -27,6 +37,11 @@ android {
     }
     buildFeatures {
         viewBinding true
+    }
+    sourceSets {
+        main {
+            python.srcDir "src/main/java/com/project/osproject/python"
+        }
     }
 }
 
