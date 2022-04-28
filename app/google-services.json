@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "941795891483",
+    "firebase_url": "https://galvanic-axle-343014-default-rtdb.firebaseio.com",
     "project_id": "galvanic-axle-343014",
     "storage_bucket": "galvanic-axle-343014.appspot.com"
   },
@@ -22,7 +23,44 @@
           }
         },
         {
-          "client_id": "941795891483-cpt7qiaebd9nna3i2rk4mpfjjp2ui0n7.apps.googleusercontent.com",
+          "client_id": "941795891483-m6rh3b2hoa62b2jsdo27e2prc7ghue82.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApQwuz8TKJ6rZ9rqnBOt4vLOLCGAfvntI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "941795891483-cpt7qiaebd9nna3i2rk4mpfjjp2ui0n7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941795891483:android:d3a477d1f56b2ba406dbbe",
+        "android_client_info": {
+          "package_name": "com.project.osproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "941795891483-0btlnbbrmqcblpthva0ppjevr1uv581d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.project.osproject",
+            "certificate_hash": "8c129a8f1b060c6cad2bb21d401c08501e13417f"
+          }
+        },
+        {
+          "client_id": "941795891483-m6rh3b2hoa62b2jsdo27e2prc7ghue82.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
