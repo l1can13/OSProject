@@ -127,6 +127,8 @@ public class FileCustom {
         return false;
     }
 
+
+
     public void upload() {
         FTPClient client = new FTPClient();
         client.setControlEncoding("UTF-8");
@@ -218,6 +220,23 @@ public class FileCustom {
             client.logout();
             client.disconnect();
             System.out.println("ФАЙЛ УДАЛЁН!");
+        } catch (IOException e) {
+            System.out.println("ОШИБКА ПРИ УДАЛЕНИИ ФАЙЛА!\n" + e);
+        }
+    }
+
+    public void renameFile(String newFileName) {
+        FTPClient client = new FTPClient();
+        client.setControlEncoding("UTF-8");
+        try {
+            client.connect("backup-storage5.hostiman.ru");
+            client.enterLocalPassiveMode();
+            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+            client.setFileType(FTP.BINARY_FILE_TYPE);
+            client.rename(this.filename, newFileName );
+            client.logout();
+            client.disconnect();
+            System.out.println("ФАЙЛ rename!");
         } catch (IOException e) {
             System.out.println("ОШИБКА ПРИ УДАЛЕНИИ ФАЙЛА!\n" + e);
         }

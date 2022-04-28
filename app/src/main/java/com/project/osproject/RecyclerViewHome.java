@@ -1,6 +1,8 @@
 package com.project.osproject;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -10,9 +12,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -139,6 +143,8 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                             return true;
                         }
 
+
+
                         @Override
                         public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
                             int id = menuItem.getItemId();
@@ -168,6 +174,51 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                     mainViewModel.setTextt(String.valueOf(selectList.size()));
                                     notifyDataSetChanged();
                                     break;
+                                case R.id.menu_rename:
+                                    final EditText input = new EditText(context);
+                                    AlertDialog.Builder dialog = new AlertDialog.Builder(context)
+                                            .setTitle("Введите нового файла")
+                                            .setView(input)
+                                            .setPositiveButton("Применить", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    if(selectList.size() == 1){
+                                                        Thread thread = new Thread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                StringBuilder typeOfFile = new StringBuilder("");
+                                                                for (String s : selectList) {
+                                                                    for (int i = s.length() - 1; i > 0; --i) {
+                                                                        if (s.charAt(i) == '.' || s.charAt(i) == '-')
+                                                                            break;
+                                                                        typeOfFile.append(s.charAt(i));
+                                                                    }
+                                                                }
+                                                                new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + typeOfFile.reverse());
+                                                            }
+                                                        });
+                                                        thread.start();
+                                                    }
+                                                    else{
+                                                        AlertDialog.Builder dialog = new AlertDialog.Builder(context)
+                                                                .setTitle("Выберите только один файл!")
+                                                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                                    @Override
+                                                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                                                        dialogInterface.cancel();
+                                                                    }
+                                                                });
+                                                        dialog.show();
+                                                    }
+                                                }
+                                            })
+                                            .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    dialogInterface.cancel();;
+                                                }
+                                            });
+                                    dialog.show();
                             }
                             return true;
                         }

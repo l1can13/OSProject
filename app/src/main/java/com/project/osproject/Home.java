@@ -16,6 +16,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -75,6 +77,7 @@ public class Home extends AppCompatActivity {
     private View sideMenuHeader;
     private NotificationManager notificationManager;
     private RecyclerView recyclerView;
+    private EditText findBar;
 
     /*Элементы для бокового меню*/
     private TextView left_side_username;
@@ -112,13 +115,11 @@ public class Home extends AppCompatActivity {
     }
 
     private void saveList(List<String> list) {
-        try {
-            python.getModule("main").callAttr("Save", "User_Data/" + fbAuth.getUid() + "/" + FilePath, filenamesList.toArray(new String[0]),python_flag);
-            python_flag = true;
-            //dbReference.child("User_Data").child(fbAuth.getUid()+FilePath).setValue(list);
-        } catch(Exception e) {
-            System.out.println("ОШИБКА ПРИ СОХРАНЕНИИ СПИСКА ИМЕН ФАЙЛОВ!");
-        }
+
+        python.getModule("main").callAttr("Save", "User_Data/" + fbAuth.getUid() + "/" + FilePath, filenamesList.toArray(new String[0]),python_flag);
+        python_flag = true;
+        //dbReference.child("User_Data").child(fbAuth.getUid()+FilePath).setValue(list);
+
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -335,6 +336,8 @@ public class Home extends AppCompatActivity {
         dialog.show();
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -365,7 +368,7 @@ public class Home extends AppCompatActivity {
                 bottomNavigationView = findViewById(R.id.bottomMenu);
                 recyclerView = findViewById(R.id.recyclerView);
                 notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-
+                findBar = findViewById(R.id.search);
                 sideMenuHeader = sideMenu.getHeaderView(0);
                 backButton = sideMenuHeader.findViewById(R.id.backButton);
 

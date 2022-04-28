@@ -10,7 +10,13 @@
     <item
         android:id="@+id/menu_select_all"
         android:title="@string/selectAll"
+        android:icon="@drawable/selectall"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/menu_rename"
+        android:title="@string/selectAll"
         android:icon="@drawable/rename"
         app:showAsAction="ifRoom" />
+
 
 </menu>

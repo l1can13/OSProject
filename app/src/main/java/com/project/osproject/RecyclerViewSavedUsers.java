@@ -161,7 +161,6 @@ public class RecyclerViewSavedUsers extends RecyclerView.Adapter<RecyclerViewSav
             selectList.remove(s);
         }
         mainViewModel.setTextt(String.valueOf(selectList.size()));
-
     }
 
     @Override
