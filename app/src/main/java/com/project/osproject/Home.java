@@ -157,7 +157,6 @@ public class Home extends AppCompatActivity {
             filenamesList = new ArrayList<String>(Arrays.asList(python.getModule("main")
                     .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/" + FilePath)
                     .toJava(String[].class)));
-            //System.out.println("COMPARE ПУТЬ: " + FilePath);
             recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this, FilePath));
         }catch (NullPointerException e){
             Toast.makeText(this, "Попробуйте еще раз!", Toast.LENGTH_SHORT).show();
@@ -322,6 +321,13 @@ public class Home extends AppCompatActivity {
 
     }
 
+    private boolean isFolderEnds(){
+        String[] spillter = FilePath.split("/");
+        if(spillter.length == 31)
+            return true;
+        return false;
+    }
+
     private void CreateFolder() {
         final EditText input = new EditText(this);
         AlertDialog.Builder dialog = new AlertDialog.Builder(Home.this)
@@ -330,26 +336,29 @@ public class Home extends AppCompatActivity {
                 .setPositiveButton("Создать папку", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        if (!input.getText().toString().isEmpty()) {
-                            if (!isFileDuplicate(input.getText().toString()+ "-folder")) {
-                                FileCustom file = new FileCustom(getApplicationContext(), fbAuth, FilePath + "/" + input.getText().toString() + "-folder/");
-                                Thread thread = new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        file.CreateDir();
-                                    }
-                                });
-                                thread.start();
-                                filenamesList.add(input.getText().toString() + "-folder");
-                                saveList();
-                            }
-                            else{
-                                Toast.makeText(Home.this, "Такая папка уже есть!", Toast.LENGTH_SHORT).show();
+                        if (!isFolderEnds()) {
+                            if (!input.getText().toString().isEmpty()) {
+                                if (!isFileDuplicate(input.getText().toString() + "-folder")) {
+                                    FileCustom file = new FileCustom(getApplicationContext(), fbAuth, FilePath + "/" + input.getText().toString() + "-folder/");
+                                    Thread thread = new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            file.CreateDir();
+                                        }
+                                    });
+                                    thread.start();
+                                    filenamesList.add(input.getText().toString() + "-folder");
+                                    saveList();
+                                } else {
+                                    Toast.makeText(Home.this, "Такая папка уже есть!", Toast.LENGTH_SHORT).show();
+                                    input.setText("");
+                                }
+                            } else {
+                                Toast.makeText(Home.this, "Введите непустое название!", Toast.LENGTH_SHORT).show();
                                 input.setText("");
                             }
-                        } else {
-                            Toast.makeText(Home.this, "Введите непустое название!", Toast.LENGTH_SHORT).show();
-                            input.setText("");
+                        }else{
+                            Toast.makeText(Home.this, "Вы уже создали максимальное число папок вглубь - 30!", Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
@@ -357,7 +366,6 @@ public class Home extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.cancel();
-                        ;
                     }
                 });
         dialog.show();
