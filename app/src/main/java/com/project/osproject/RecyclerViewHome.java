@@ -213,9 +213,17 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                                                         typeOfFile.append(s.charAt(i));
                                                                     }
                                                                 }
-                                                                new FileCustom(filenamesList.get(position), context, fbAuth, FilePath).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
-                                                                filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
-                                                                home.saveList();
+                                                                if(!filenamesList.get(position).endsWith("-folder")) {
+                                                                    new FileCustom(filenamesList.get(position), context, fbAuth, FilePath).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
+                                                                    filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
+                                                                    home.saveList();
+                                                                }
+                                                                else{
+                                                                    new FileCustom(filenamesList.get(position), context, fbAuth, FilePath).renameFile(input.getText().toString() + "-" + typeOfFile.reverse());
+                                                                    home.python_rename_folder(FilePath, filenamesList.get(position), input.getText().toString() + "-" + typeOfFile);
+                                                                    filenamesList.set(position, input.getText().toString() + "-" + typeOfFile);
+
+                                                                }
                                                             }
                                                         });
                                                         thread.start();

@@ -118,6 +118,9 @@ public class Home extends AppCompatActivity {
         }
     }
 
+    public void python_rename_folder(String path, String old_name, String new_name){
+        python.getModule("main").callAttr("folder_rename", "User_Data/" + fbAuth.getUid() + path, old_name, new_name);
+    }
 
     public void python_delete_folder(String path, String name){
         python.getModule("main").callAttr("delete_folder", "User_Data/" + fbAuth.getUid() + path, name);
@@ -285,17 +288,11 @@ public class Home extends AppCompatActivity {
     }
 
     @Override
-    protected void onUserLeaveHint() {
-        saveList();
-        super.onUserLeaveHint();
-    }
-
-    @Override
     public void onBackPressed() {
         if (!FilePath.isEmpty())
             python_getBack();
         else {
-            saveList();
+            //saveList();
             super.onBackPressed();
         }
     }

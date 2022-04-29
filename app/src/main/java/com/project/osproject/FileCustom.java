@@ -170,6 +170,8 @@ public class FileCustom {
             } else {
                 removeDirectory(userId, client, filename);
             }
+            client.logout();
+            client.disconnect();
         } catch (IOException e) {
             Toast.makeText(context, "Ошибка при удалении папки", Toast.LENGTH_SHORT).show();
         }
@@ -332,9 +334,11 @@ public class FileCustom {
             String userId = this.fbAuth.getUid();
             if(FilePath != null) {
                 client.rename(userId + "/" + FilePath + "/" + this.filename, userId + "/" + FilePath + "/" + newFileName);
+
             }
             else{
                 client.rename(userId + "/" + this.filename, userId + "/" + newFileName);
+
             }
             client.logout();
             client.disconnect();
