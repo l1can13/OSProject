@@ -132,7 +132,21 @@ public class Home extends AppCompatActivity {
 
     }
 
+    public void python_getBack(){
+        FilePath = python.getModule("main").callAttr("back", "User_Data/" + fbAuth.getUid() + "/" + FilePath).toJava(String.class);
+        filenamesList = new ArrayList<String>(Arrays.asList(python.getModule("main")
+                .callAttr("loader", FilePath)
+                .toJava(String[].class)));
+        FilePathConverter();
+        recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this, FilePath));
+    }
 
+    private void FilePathConverter(){
+        String[] splitter = FilePath.split("/");
+        FilePath = "";
+        for(int i = 2; i < splitter.length; ++i)
+            FilePath+= "/" + splitter[i];
+    }
 
     public void PathCompare(String path){
         FilePath += path;
@@ -140,14 +154,13 @@ public class Home extends AppCompatActivity {
             filenamesList = new ArrayList<String>(Arrays.asList(python.getModule("main")
                     .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/" + FilePath)
                     .toJava(String[].class)));
-            System.out.println("COMPARE ПУТЬ: " + FilePath);
+            //System.out.println("COMPARE ПУТЬ: " + FilePath);
             recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this, FilePath));
         }catch (NullPointerException e){
             Toast.makeText(this, "Попробуйте еще раз!", Toast.LENGTH_SHORT).show();
         }
 
     }
-
 
 
     @SuppressLint({"NotifyDataSetChanged", "RestrictedApi"})
@@ -267,8 +280,24 @@ public class Home extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         saveList();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        saveList();
+        super.onUserLeaveHint();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!FilePath.isEmpty())
+            python_getBack();
+        else {
+            saveList();
+            super.onBackPressed();
+        }
     }
 
     private void ShowOptions(){
