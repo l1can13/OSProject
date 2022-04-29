@@ -47,7 +47,6 @@ public class Account extends AppCompatActivity {
     private LinearLayout darkMode;
     private LinearLayout sendFeedback;
     private RelativeLayout version;
-    private LinearLayout clearCache;
     private CircleImageView avatar;
     private GoogleSignInClient googleSignInClient;
     private StorageReference storageReference;
@@ -185,7 +184,6 @@ public class Account extends AppCompatActivity {
         darkMode = findViewById(R.id.darkMode);
         sendFeedback = findViewById(R.id.feedback);
         version = findViewById(R.id.version);
-        clearCache = findViewById(R.id.clearCache);
 
         logout_button.setOnClickListener(new View.OnClickListener() {
             @Override
