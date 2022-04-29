@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -67,6 +68,14 @@ public class FileCustom {
         this.fbAuth = fbAuth;
         this.uploadDate = Calendar.getInstance();
     }
+
+    public FileCustom(String filename, Context context, FirebaseAuth fbAuth, String FilePath) {
+        this.context = context;
+        this.filename = filename;
+        this.fbAuth = fbAuth;
+        this.uploadDate = Calendar.getInstance();
+        this.FilePath = FilePath;
+    }
     
     public boolean getFlag(){
         return this.flag;
@@ -112,6 +121,61 @@ public class FileCustom {
         catch (IOException e){
             Toast.makeText(context, "Ошибка при создании папки", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public static void removeDirectory(String parentDir, FTPClient ftpClient, String currentDir) throws IOException {
+        String dirToList = parentDir;
+        if (!currentDir.equals("")) {
+            dirToList += "/" + currentDir;
+        }
+
+        FTPFile[] subFiles = ftpClient.listFiles(dirToList);
+
+        if (subFiles != null && subFiles.length > 0) {
+            for (FTPFile aFile : subFiles) {
+                String currentFileName = aFile.getName();
+                if (currentFileName.equals(".") || currentFileName.equals("..")) {
+                    // skip parent directory and the directory itself
+                    continue;
+                }
+                String filePath = parentDir + "/" + currentDir + "/"
+                        + currentFileName;
+                if (currentDir.equals("")) {
+                    filePath = parentDir + "/" + currentFileName;
+                }
+
+                if (aFile.isDirectory()) {
+                    removeDirectory( dirToList, ftpClient, currentFileName);
+                } else {
+                    boolean deleted = ftpClient.deleteFile(filePath);
+                }
+            }
+
+            boolean removed = ftpClient.removeDirectory(dirToList);
+        }
+    }
+
+
+    public void DeleteDir() {
+        FTPClient client = new FTPClient();
+        client.setControlEncoding("UTF-8");
+        String userId = this.fbAuth.getUid();
+
+        try {
+            client.connect("backup-storage5.hostiman.ru");
+            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+            client.enterLocalPassiveMode();
+            if (FilePath != null) {
+                removeDirectory(userId + FilePath + "/", client, filename);
+            } else {
+                removeDirectory(userId, client, filename);
+            }
+        } catch (IOException e) {
+            Toast.makeText(context, "Ошибка при удалении папки", Toast.LENGTH_SHORT).show();
+        }
+
+
+
     }
 
     private boolean checkIfDirectoryExists(String path) {
@@ -248,6 +312,7 @@ public class FileCustom {
             else{
                 client.deleteFile(fbAuth.getUid()+ "/" + this.filename);
             }
+
             client.logout();
             client.disconnect();
             System.out.println("ФАЙЛ УДАЛЁН!");

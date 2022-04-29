@@ -1,5 +1,6 @@
 package com.project.osproject;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -44,14 +45,16 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
     ArrayList<String> selectList = new ArrayList<>();
     MainViewModel mainViewModel;
     Home home;
+    private String FilePath;
 
     FirebaseAuth fbAuth;
 
-    RecyclerViewHome(Context context, List<String> filenamesList, FirebaseAuth fbAuth, Home home) {
+    RecyclerViewHome(Context context, List<String> filenamesList, FirebaseAuth fbAuth, Home home, String Filepath) {
         this.context = context;
         this.filenamesList = filenamesList;
         this.fbAuth = fbAuth;
         this.home = home;
+        this.FilePath = Filepath;
     }
 
     @NonNull
@@ -64,7 +67,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerViewHome.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerViewHome.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         String buf = filenamesList.get(position);
 
         StringBuilder typeOfFile = new StringBuilder("");
@@ -154,14 +157,27 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                         Thread thread = new Thread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                new FileCustom(s, context, fbAuth).deleteFile();
+                                                if (!s.endsWith("-folder")) {
+                                                    new FileCustom(s, context, fbAuth, FilePath).deleteFile();
+                                                    home.python_delete(FilePath);
+
+                                                } else {
+                                                    new FileCustom(s, context, fbAuth, FilePath).DeleteDir();
+                                                    home.python_delete_folder(FilePath, s);
+
+                                                }
+
                                             }
                                         });
 
                                         thread.start();
-
-                                        filenamesList.remove(s);
-                                        home.saveList();
+                                        if (!s.endsWith("-folder")) {
+                                            filenamesList.remove(s);
+                                            home.saveList();
+                                        }
+                                        else {
+                                            filenamesList.remove(s);
+                                        }
                                     }
                                     actionMode.finish();
                                     break;
@@ -197,8 +213,8 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                                                         typeOfFile.append(s.charAt(i));
                                                                     }
                                                                 }
-                                                                new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
-                                                                filenamesList.set(position, input.getText().toString() + "." + typeOfFile.reverse());
+                                                                new FileCustom(filenamesList.get(position), context, fbAuth, FilePath).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
+                                                                filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
                                                                 home.saveList();
                                                             }
                                                         });
@@ -258,7 +274,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
             public void onClick(View view) {
                 if (!buf.endsWith("-folder")) {
                     System.out.println("BUF: " + buf);
-                    FileCustom file = new FileCustom(buf, context, fbAuth);
+                    FileCustom file = new FileCustom(buf, context, fbAuth, FilePath);
                     Thread thread = new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -267,7 +283,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                     });
                     thread.start();
                 }else{
-                    home.PathCompare("/" + buf + "/");
+                    home.PathCompare("/" + buf);
                 }
             }
         });
