@@ -110,7 +110,6 @@ public class Home extends AppCompatActivity {
         intent.setType("*/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         Intent chooser = Intent.createChooser(intent, "Select a File to Upload");
-        System.out.println("FILEPATH: " + FilePath);
 
         try {
             startActivityForResult(chooser, 0);
@@ -120,12 +119,20 @@ public class Home extends AppCompatActivity {
     }
 
 
+    public void python_delete_folder(String path, String name){
+        python.getModule("main").callAttr("delete_folder", "User_Data/" + fbAuth.getUid() + path, name);
+    }
 
+    public void python_delete(String path){
+        python.getModule("main").callAttr("delete", "User_Data/" + fbAuth.getUid() + path);
+    }
 
     public void saveList() {
         python.getModule("main").callAttr("Save", "User_Data/" + fbAuth.getUid() + "/" + FilePath, filenamesList.toArray(new String[0]));
 
     }
+
+
 
     public void PathCompare(String path){
         FilePath += path;
@@ -133,8 +140,8 @@ public class Home extends AppCompatActivity {
             filenamesList = new ArrayList<String>(Arrays.asList(python.getModule("main")
                     .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/" + FilePath)
                     .toJava(String[].class)));
-
-            recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this));
+            System.out.println("COMPARE ПУТЬ: " + FilePath);
+            recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this, FilePath));
         }catch (NullPointerException e){
             Toast.makeText(this, "Попробуйте еще раз!", Toast.LENGTH_SHORT).show();
         }
@@ -179,14 +186,16 @@ public class Home extends AppCompatActivity {
     }
 
 
-    private boolean isFileDuplicate(FileCustom file){
+    private boolean isFileDuplicate(String file){
         for(int i = 0; i < filenamesList.size(); ++i){
-            if(filenamesList.get(i).equals(file.getName())){
+            if(filenamesList.get(i).equals(file)){
                 return true;
             }
         }
         return false;
     }
+
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent result) {
@@ -195,7 +204,7 @@ public class Home extends AppCompatActivity {
         if (resultCode == RESULT_OK && requestCode == 0) {
             Uri uri = result.getData();
             FileCustom file = new FileCustom(uri, getApplicationContext(), fbAuth, FilePath);
-            if (!isFileDuplicate(file)) {
+            if (!isFileDuplicate(file.getName())) {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -212,7 +221,6 @@ public class Home extends AppCompatActivity {
                     filenamesList.add(file.getName());
                     recyclerViewAdapter.notifyItemInserted(filenamesList.size() - 1);
                     recyclerView.scrollToPosition(filenamesList.size() - 1);
-                    //saveList(filenamesList);
                     saveList();
                 }
             } else {
@@ -297,16 +305,22 @@ public class Home extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         if (!input.getText().toString().isEmpty()) {
-                            FileCustom file = new FileCustom(getApplicationContext(), fbAuth, FilePath+input.getText().toString()+"-folder/");
-                            Thread thread = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    file.CreateDir();
-                                }
-                            });
-                            thread.start();
-                            filenamesList.add(input.getText().toString()+"-folder");
-                            saveList();
+                            if (!isFileDuplicate(input.getText().toString()+ "-folder")) {
+                                FileCustom file = new FileCustom(getApplicationContext(), fbAuth, FilePath + "/" + input.getText().toString() + "-folder/");
+                                Thread thread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        file.CreateDir();
+                                    }
+                                });
+                                thread.start();
+                                filenamesList.add(input.getText().toString() + "-folder");
+                                saveList();
+                            }
+                            else{
+                                Toast.makeText(Home.this, "Такая папка уже есть!", Toast.LENGTH_SHORT).show();
+                                input.setText("");
+                            }
                         } else {
                             Toast.makeText(Home.this, "Введите непустое название!", Toast.LENGTH_SHORT).show();
                             input.setText("");
@@ -316,7 +330,8 @@ public class Home extends AppCompatActivity {
                 .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.cancel();;
+                        dialogInterface.cancel();
+                        ;
                     }
                 });
         dialog.show();
@@ -386,7 +401,7 @@ public class Home extends AppCompatActivity {
 
                 recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-                recyclerViewAdapter = new RecyclerViewHome(this, filenamesList,fbAuth, this);
+                recyclerViewAdapter = new RecyclerViewHome(this, filenamesList,fbAuth, this, FilePath);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
                 }
@@ -503,17 +518,17 @@ public class Home extends AppCompatActivity {
                         switch (item.getItemId()) {
                             case R.id.homeItem:
                                 //saveList(filenamesList);
-                                saveList();
+//                                saveList();
                                 return true;
                             case R.id.generalItem:
                                 //saveList(filenamesList);
-                                saveList();
+                                //saveList();
                                 startActivity(new Intent(getApplicationContext(), General.class));
                                 overridePendingTransition(0, 0);
                                 return true;
                             case R.id.accountItem:
                                 //saveList(filenamesList);
-                                saveList();
+                                //saveList();
                                 startActivity(new Intent(getApplicationContext(), Account.class));
                                 overridePendingTransition(0, 0);
                                 return true;
