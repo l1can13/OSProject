@@ -11,11 +11,13 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -24,11 +26,25 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class General extends AppCompatActivity {
 
@@ -38,10 +54,56 @@ public class General extends AppCompatActivity {
     private ImageButton menuButton;
     private ImageButton backButton;
     private View sideMenuHeader;
+
+    private FirebaseAuth fbAuth;
+    private DatabaseReference dbReference;
+
+
     private NotificationManager notificationManager;
+
+    private TextView left_side_username;
+    private TextView left_side_email;
+    private CircleImageView left_side_avatar;
 
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";
+
+    private void setAvatar(StorageReference profileRef){
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).into(left_side_avatar);
+                        }
+                    });
+                }else{
+                    GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(General.this);
+                    if(googleSignInAccount == null) {
+                        StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                                .child("profile_avatars").child("default.jpg");
+                        Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Picasso.get().load(uri).into(left_side_avatar);
+                            }
+                        });
+                    }else
+                        Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +134,12 @@ public class General extends AppCompatActivity {
             }
         });
 
+        left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
+        left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
+        left_side_username = sideMenuHeader.findViewById(R.id.username);
+        fbAuth = FirebaseAuth.getInstance();
+        dbReference = FirebaseDatabase.getInstance().getReference();
+
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -90,6 +158,23 @@ public class General extends AppCompatActivity {
                 return false;
             }
         });
+
+        dbReference.child("User_Info").child(fbAuth.getUid()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                FireBaseUser user = snapshot.getValue(FireBaseUser.class);
+                left_side_username.setText(user.getUsername());
+                left_side_email.setText(user.getEmail());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        setAvatar(FirebaseStorage.getInstance().getReference()
+                .child("profile_avatars").child(fbAuth.getUid() + ".jpg"));
 
         sideMenu.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
