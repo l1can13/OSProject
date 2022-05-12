@@ -274,7 +274,7 @@ public class FileCustom {
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
-            if(FilePath != null) {
+            if(FilePath != "") {
                 client.retrieveFile(fbAuth.getUid() + "/" + FilePath + "/" + this.filename, outputStream);
             }
             else{
@@ -310,6 +310,29 @@ public class FileCustom {
             client.setFileType(FTP.BINARY_FILE_TYPE);
             if(FilePath != null) {
                 client.deleteFile(fbAuth.getUid()+ "/" + FilePath + "/" + this.filename);
+            }
+            else{
+                client.deleteFile(fbAuth.getUid()+ "/" + this.filename);
+            }
+
+            client.logout();
+            client.disconnect();
+            System.out.println("ФАЙЛ УДАЛЁН!");
+        } catch (IOException e) {
+            System.out.println("ОШИБКА ПРИ УДАЛЕНИИ ФАЙЛА!\n" + e);
+        }
+    }
+
+    public void deleteTrashFile() {
+        FTPClient client = new FTPClient();
+        client.setControlEncoding("UTF-8");
+        try {
+            client.connect("backup-storage5.hostiman.ru");
+            client.enterLocalPassiveMode();
+            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+            client.setFileType(FTP.BINARY_FILE_TYPE);
+            if(FilePath != null) {
+                client.deleteFile(fbAuth.getUid()+ "/" + FilePath + "/" + "(deleted) " + this.filename);
             }
             else{
                 client.deleteFile(fbAuth.getUid()+ "/" + this.filename);

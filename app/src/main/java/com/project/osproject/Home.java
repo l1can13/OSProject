@@ -26,7 +26,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -36,7 +35,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -48,7 +46,6 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -59,7 +56,6 @@ import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -94,6 +90,7 @@ public class Home extends AppCompatActivity {
     /* Shared Preferences */
     private SharedPreferences fb_SharedPreference_settings;
     private List<String> filenamesList;
+    private List<String> trashList = new LinkedList<>();
 
     /* FireBase */
     private FirebaseAuth fbAuth;
@@ -121,50 +118,52 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    public void python_rename_folder(String path, String old_name, String new_name){
+    public void python_rename_folder(String path, String old_name, String new_name) {
         python.getModule("main").callAttr("folder_rename", "User_Data/" + fbAuth.getUid() + path, old_name, new_name);
     }
 
-    public void python_delete_folder(String path, String name){
+    public void python_delete_folder(String path, String name) {
         python.getModule("main").callAttr("delete_folder", "User_Data/" + fbAuth.getUid() + path, name);
     }
 
-    public void python_delete(String path){
+    public void python_delete(String path) {
         python.getModule("main").callAttr("delete", "User_Data/" + fbAuth.getUid() + path);
     }
 
     public void saveList() {
-        python.getModule("main").callAttr("Save", "User_Data/" + fbAuth.getUid() + "/" + FilePath, filenamesList.toArray(new String[0]));
-
+        python.getModule("main").callAttr("Save", "User_Data/" + fbAuth.getUid() + "/Current/" + FilePath, filenamesList.toArray(new String[0]));
     }
 
-    public void python_getBack(){
-        FilePath = python.getModule("main").callAttr("back", "User_Data/" + fbAuth.getUid() + "/" + FilePath).toJava(String.class);
+    public void saveTrash() {
+        python.getModule("main").callAttr("Save", "User_Data/" + fbAuth.getUid() + "/Trash/" + FilePath, trashList.toArray(new String[0]));
+    }
+
+    public void python_getBack() {
+        FilePath = python.getModule("main").callAttr("back", "User_Data/" + fbAuth.getUid() + "/Current/" + FilePath).toJava(String.class);
         filenamesList = new ArrayList<String>(Arrays.asList(python.getModule("main")
                 .callAttr("loader", FilePath)
                 .toJava(String[].class)));
         FilePathConverter();
-        recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this, FilePath));
+        recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath));
     }
 
-    private void FilePathConverter(){
+    private void FilePathConverter() {
         String[] splitter = FilePath.split("/");
         FilePath = "";
-        for(int i = 2; i < splitter.length; ++i)
-            FilePath+= "/" + splitter[i];
+        for (int i = 2; i < splitter.length; ++i)
+            FilePath += "/" + splitter[i];
     }
 
-    public void PathCompare(String path){
+    public void PathCompare(String path) {
         FilePath += path;
         try {
             filenamesList = new ArrayList<String>(Arrays.asList(python.getModule("main")
-                    .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/" + FilePath)
+                    .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/Current/" + FilePath)
                     .toJava(String[].class)));
-            recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList,fbAuth, this, FilePath));
-        }catch (NullPointerException e){
+            recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath));
+        } catch (NullPointerException e) {
             Toast.makeText(this, "Попробуйте еще раз!", Toast.LENGTH_SHORT).show();
         }
-
     }
 
     private void filter(String text){
@@ -180,13 +179,16 @@ public class Home extends AppCompatActivity {
         recyclerViewAdapter.filterList(filenameListRem);
     }
 
+    public List<String> getTrashList() {
+        return trashList;
+    }
 
     @SuppressLint({"NotifyDataSetChanged", "RestrictedApi"})
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public List<String> loadList() {
         List<String> arrayItems = new ArrayList<>();
 
-        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid()+FilePath);
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid() + "/Current/" + FilePath);
 
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -195,10 +197,9 @@ public class Home extends AppCompatActivity {
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
 
                     String data = "";
-                    if(postSnapshot.getValue() instanceof ArrayList || postSnapshot.getValue() instanceof HashMap){
+                    if (postSnapshot.getValue() instanceof ArrayList || postSnapshot.getValue() instanceof HashMap) {
                         data = postSnapshot.getKey();
-                    }
-                    else{
+                    } else {
                         data = postSnapshot.getValue(String.class);
                     }
 
@@ -216,16 +217,46 @@ public class Home extends AppCompatActivity {
         return arrayItems;
     }
 
+    @SuppressLint({"NotifyDataSetChanged", "RestrictedApi"})
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public List<String> loadTrash() {
+        List<String> arrayItems = new ArrayList<>();
 
-    private boolean isFileDuplicate(String file){
-        for(int i = 0; i < filenamesList.size(); ++i){
-            if(filenamesList.get(i).equals(file)){
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid() + "/Trash/" + FilePath);
+
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                arrayItems.clear();
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+
+                    String data = "";
+                    if (postSnapshot.getValue() instanceof ArrayList || postSnapshot.getValue() instanceof HashMap) {
+                        data = postSnapshot.getKey();
+                    } else {
+                        data = postSnapshot.getValue(String.class);
+                    }
+                    arrayItems.add(data);
+                    recyclerViewAdapter.notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+        return arrayItems;
+    }
+
+    private boolean isFileDuplicate(String file) {
+        for (int i = 0; i < filenamesList.size(); ++i) {
+            if (filenamesList.get(i).equals(file)) {
                 return true;
             }
         }
         return false;
     }
-
 
 
     @Override
@@ -260,7 +291,7 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    private void setAvatar(StorageReference profileRef){
+    private void setAvatar(StorageReference profileRef) {
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -272,9 +303,9 @@ public class Home extends AppCompatActivity {
                             Picasso.get().load(uri).into(left_side_avatar);
                         }
                     });
-                }else{
+                } else {
                     GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(Home.this);
-                    if(googleSignInAccount == null) {
+                    if (googleSignInAccount == null) {
                         StorageReference Ref = FirebaseStorage.getInstance().getReference()
                                 .child("profile_avatars").child("default.jpg");
                         Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
@@ -283,7 +314,7 @@ public class Home extends AppCompatActivity {
                                 Picasso.get().load(uri).into(left_side_avatar);
                             }
                         });
-                    }else
+                    } else
                         Picasso.get().load(googleSignInAccount.getPhotoUrl()).into(left_side_avatar);
                 }
             }
@@ -312,7 +343,7 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    private void ShowOptions(){
+    private void ShowOptions() {
         AlertDialog.Builder dialog = new AlertDialog.Builder(Home.this)
                 .setPositiveButton("Добавить файл", new DialogInterface.OnClickListener() {
                     @Override
@@ -337,9 +368,9 @@ public class Home extends AppCompatActivity {
 
     }
 
-    private boolean isFolderEnds(){
+    private boolean isFolderEnds() {
         String[] spillter = FilePath.split("/");
-        if(spillter.length == 31)
+        if (spillter.length == 31)
             return true;
         return false;
     }
@@ -373,7 +404,7 @@ public class Home extends AppCompatActivity {
                                 Toast.makeText(Home.this, "Введите непустое название!", Toast.LENGTH_SHORT).show();
                                 input.setText("");
                             }
-                        }else{
+                        } else {
                             Toast.makeText(Home.this, "Вы уже создали максимальное число папок вглубь - 30!", Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -392,7 +423,7 @@ public class Home extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActivityCompat.requestPermissions(Home.this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+        ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         fb_SharedPreference_settings = getPreferences(MODE_PRIVATE);
         fbAuth = FirebaseAuth.getInstance();
         if (fb_SharedPreference_settings.contains("fbAuth")) {
@@ -411,7 +442,7 @@ public class Home extends AppCompatActivity {
             if (fbUser.isEmailVerified()) {
                 dbReference = FirebaseDatabase.getInstance().getReference();
                 filenamesList = loadList();
-
+                trashList = loadTrash();
                 setContentView(R.layout.activity_home);
                 sideMenu = findViewById(R.id.navigationView);
                 addButton = findViewById(R.id.addButton);
@@ -429,7 +460,6 @@ public class Home extends AppCompatActivity {
                 left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
                 left_side_username = sideMenuHeader.findViewById(R.id.username);
 
-
                 dbReference.child("User_Info").child(fbAuth.getUid()).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -443,7 +473,6 @@ public class Home extends AppCompatActivity {
 
                     }
                 });
-
                 findBar.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -462,18 +491,14 @@ public class Home extends AppCompatActivity {
                     }
                 });
 
-
-
-                if(!Python.isStarted())
+                if (!Python.isStarted())
                     Python.start(new AndroidPlatform(this));
 
-
-                setAvatar(FirebaseStorage.getInstance().getReference()
-                        .child("profile_avatars").child(fbAuth.getUid() + ".jpg"));
+                setAvatar(FirebaseStorage.getInstance().getReference().child("profile_avatars").child(fbAuth.getUid() + ".jpg"));
 
                 recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-                recyclerViewAdapter = new RecyclerViewHome(this, filenamesList,fbAuth, this, FilePath);
+                recyclerViewAdapter = new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
                 }
@@ -570,7 +595,10 @@ public class Home extends AppCompatActivity {
                                 notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
                                 return true;
                             case R.id.trash:
-                                Toast.makeText(getApplicationContext(), "trash", Toast.LENGTH_SHORT).show();
+                                saveList();
+                                saveTrash();
+                                startActivity(new Intent(getApplicationContext(), Trash.class));
+                                overridePendingTransition(0, 0);
                                 return true;
                         }
                         return false;
@@ -608,9 +636,7 @@ public class Home extends AppCompatActivity {
                         return false;
                     }
                 });
-            }
-            else
-            {
+            } else {
                 //Высылаем подтверждение по почте
                 verifyEmail();
             }
@@ -622,7 +648,7 @@ public class Home extends AppCompatActivity {
         String UserEmail = fbAuth.getCurrentUser().getEmail();
         AlertDialog.Builder dialog = new AlertDialog.Builder(Home.this)
                 .setTitle("Вы не авторизованы!")
-                .setMessage("Пожалуйста, подтвердите свой адрес электоронной почты " + UserEmail +"!")
+                .setMessage("Пожалуйста, подтвердите свой адрес электоронной почты " + UserEmail + "!")
                 .setPositiveButton("Отправить код еще раз", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {

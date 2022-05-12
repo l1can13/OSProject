@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
-import android.os.Build;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -15,14 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.Filter;
-import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
@@ -31,45 +27,38 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import com.google.firebase.auth.FirebaseAuth;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
-public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.ViewHolder> {
-
+public class RecyclerViewTrash extends RecyclerView.Adapter<RecyclerViewTrash.ViewHolder> {
 
     Context context;
-    List<String> filenamesList;
-
-
-
+    List<String> trashList;
 
     boolean isEnable = false;
     boolean isSelectAll = false;
     ArrayList<String> selectList = new ArrayList<>();
     MainViewModel mainViewModel;
-    Home home;
-    private String FilePath;
-
+    Trash trash;
+    String FilePath;
     FirebaseAuth fbAuth;
+    private List<String> filenamesList;
 
-    @RequiresApi(api = Build.VERSION_CODES.S)
-    RecyclerViewHome(Context context, List<String> filenamesList, FirebaseAuth fbAuth, Home home, String Filepath) {
+    RecyclerViewTrash(Context context, List<String> trashList, FirebaseAuth fbAuth, Trash trash, String Filepath) {
         this.context = context;
-        this.filenamesList = filenamesList;
+        this.trashList = trashList;
         this.fbAuth = fbAuth;
-        this.home = home;
+        this.trash = trash;
         this.FilePath = Filepath;
+        filenamesList = trash.loadList();
     }
 
     @NonNull
     @Override
-    public RecyclerViewHome.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RecyclerViewTrash.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.activity_recycler_view_home, parent, false);
         mainViewModel = ViewModelProviders.of((FragmentActivity) context)
                 .get(MainViewModel.class);
@@ -77,8 +66,8 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerViewHome.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
-        String buf = filenamesList.get(position);
+    public void onBindViewHolder(@NonNull RecyclerViewTrash.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+        String buf = trashList.get(position);
 
         StringBuilder typeOfFile = new StringBuilder("");
         for (int i = buf.length() - 1; i > 0; --i) {
@@ -132,13 +121,14 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
         holder.recyclerViewItemsParent.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
+
                 if (!isEnable) {
                     ActionMode.Callback callback = new ActionMode.Callback() {
 
                         @Override
                         public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
                             MenuInflater menuInflater = actionMode.getMenuInflater();
-                            menuInflater.inflate(R.menu.menu_delete, menu);
+                            menuInflater.inflate(R.menu.menu_delete_trash, menu);
                             return true;
                         }
 
@@ -165,13 +155,11 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                             @Override
                                             public void run() {
                                                 if (!s.endsWith("-folder")) {
-//                                                    new FileCustom(s, context, fbAuth, FilePath).deleteFile();
-                                                    FileCustom file = new FileCustom(s, context, fbAuth, FilePath);
-                                                    file.renameFile("(deleted) " + s);
-                                                    home.python_delete(FilePath);
+                                                    new FileCustom(s, context, fbAuth, FilePath).deleteTrashFile();
+                                                    trash.python_delete("/Trash/" + FilePath);
                                                 } else {
                                                     new FileCustom(s, context, fbAuth, FilePath).DeleteDir();
-                                                    home.python_delete_folder(FilePath, s);
+                                                    trash.python_delete_folder(FilePath, s);
                                                 }
 
                                             }
@@ -179,88 +167,56 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
 
                                         thread.start();
                                         if (!s.endsWith("-folder")) {
-                                            home.getTrashList().add(s);
-                                            filenamesList.remove(s);
-                                            home.saveList();
-                                            home.saveTrash();
+                                            trashList.remove(s);
+                                            trash.saveTrash();
                                         }
                                         else {
-                                            filenamesList.remove(s);
+                                            trashList.remove(s);
                                         }
                                     }
                                     actionMode.finish();
                                     break;
                                 case R.id.menu_select_all:
-                                    if (selectList.size() == filenamesList.size()) {
+                                    if (selectList.size() == trashList.size()) {
                                         isSelectAll = false;
                                         selectList.clear();
                                     } else {
                                         isSelectAll = true;
                                         selectList.clear();
-                                        selectList.addAll(filenamesList);
+                                        selectList.addAll(trashList);
                                     }
                                     mainViewModel.setTextt(String.valueOf(selectList.size()));
                                     notifyDataSetChanged();
                                     break;
-                                case R.id.menu_rename:
-                                    final EditText input = new EditText(context);
-                                    AlertDialog.Builder dialog = new AlertDialog.Builder(context)
-                                            .setTitle("Введите нового файла")
-                                            .setView(input)
-                                            .setPositiveButton("Применить", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialogInterface, int i) {
-                                                    if(selectList.size() == 1){
-                                                        Thread thread = new Thread(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                StringBuilder typeOfFile = new StringBuilder("");
-                                                                for (String s : selectList) {
-                                                                    for (int i = s.length() - 1; i > 0; --i) {
-                                                                        if (s.charAt(i) == '.' || s.charAt(i) == '-')
-                                                                            break;
-                                                                        typeOfFile.append(s.charAt(i));
-                                                                    }
-                                                                }
-                                                                if(!filenamesList.get(position).endsWith("-folder")) {
-                                                                    new FileCustom(filenamesList.get(position), context, fbAuth, FilePath).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
-                                                                    filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
-                                                                    home.saveList();
-                                                                }
-                                                                else{
-                                                                    new FileCustom(filenamesList.get(position), context, fbAuth, FilePath).renameFile(input.getText().toString() + "-" + typeOfFile.reverse());
-                                                                    home.python_rename_folder(FilePath, filenamesList.get(position), input.getText().toString() + "-" + typeOfFile);
-                                                                    filenamesList.set(position, input.getText().toString() + "-" + typeOfFile);
-
-                                                                }
-
-                                                                new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
-                                                                filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
-                                                                home.saveList();
-                                                            }
-                                                        });
-                                                        thread.start();
-                                                    }
-                                                    else{
-                                                        AlertDialog.Builder dialog = new AlertDialog.Builder(context)
-                                                                .setTitle("Выберите только один файл!")
-                                                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                                                    @Override
-                                                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                                                        dialogInterface.cancel();
-                                                                    }
-                                                                });
-                                                        dialog.show();
-                                                    }
+                                case R.id.menu_back:
+                                    for (String s : selectList) {
+                                        Thread thread = new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                if (!s.endsWith("-folder")) {
+                                                    new FileCustom(s, context, fbAuth, FilePath).renameFile(s);
+                                                    trash.python_delete("/Trash/" + FilePath);
+                                                } else {
+                                                    new FileCustom(s, context, fbAuth, FilePath).DeleteDir();
+                                                    trash.python_delete_folder(FilePath, s);
                                                 }
-                                            })
-                                            .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialogInterface, int i) {
-                                                    dialogInterface.cancel();;
-                                                }
-                                            });
-                                    dialog.show();
+
+                                            }
+                                        });
+
+                                        thread.start();
+                                        if (!s.endsWith("-folder")) {
+                                            filenamesList.add(s);
+                                            trashList.remove(s);
+                                            trash.saveTrash();
+                                            trash.saveList(filenamesList);
+                                        }
+                                        else {
+                                            trashList.remove(s);
+                                        }
+                                    }
+                                    actionMode.finish();
+                                    break;
                             }
                             return true;
                         }
@@ -304,14 +260,14 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                     });
                     thread.start();
                 }else{
-                    home.PathCompare("/" + buf);
+                    trash.PathCompare("/" + buf);
                 }
             }
         });
     }
 
     private void ClickItem(ViewHolder holder) {
-        String s = filenamesList.get(holder.getAdapterPosition());
+        String s = trashList.get(holder.getAdapterPosition());
         if (holder.checkBox.getVisibility() == View.GONE) {
             holder.checkBox.setVisibility(View.VISIBLE);
             holder.recyclerViewItemsParent.setBackgroundColor(Color.LTGRAY);
@@ -330,7 +286,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
 
     @Override
     public int getItemCount() {
-        return filenamesList.size();
+        return trashList.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -347,11 +303,4 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
             recyclerViewItemsParent = itemView.findViewById(R.id.recyclerViewItemsParent);
         }
     }
-
-   public void filterList(LinkedList<String> filteredList){
-        filenamesList = filteredList;
-        notifyDataSetChanged();
-   }
-
-
 }

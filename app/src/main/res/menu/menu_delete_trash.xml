@@ -13,9 +13,9 @@
         android:icon="@drawable/select_all"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/menu_rename"
-        android:title="@string/rename"
-        android:icon="@drawable/rename"
+        android:id="@+id/menu_back"
+        android:title="@string/returnBack"
+        android:icon="@drawable/return_back"
         app:showAsAction="ifRoom" />
 
 
