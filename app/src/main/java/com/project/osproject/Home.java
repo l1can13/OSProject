@@ -432,8 +432,6 @@ public class Home extends AppCompatActivity {
             fbAuth = gson.fromJson(json, FirebaseAuth.class);
         }
 
-
-
         FirebaseUser fbUser = fbAuth.getCurrentUser();
 
         if (fbUser == null) {
@@ -538,7 +536,6 @@ public class Home extends AppCompatActivity {
                         switch (item.getItemId()) {
                             case R.id.savedUsers:
                                 //saveList(filenamesList);
-                                saveList();
                                 startActivity(new Intent(getApplicationContext(), SavedUsers.class));
                                 overridePendingTransition(0, 0);
                                 return true;
@@ -595,8 +592,6 @@ public class Home extends AppCompatActivity {
                                 notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
                                 return true;
                             case R.id.trash:
-                                saveList();
-                                saveTrash();
                                 startActivity(new Intent(getApplicationContext(), Trash.class));
                                 overridePendingTransition(0, 0);
                                 return true;

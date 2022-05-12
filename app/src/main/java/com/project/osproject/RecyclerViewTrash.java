@@ -156,12 +156,11 @@ public class RecyclerViewTrash extends RecyclerView.Adapter<RecyclerViewTrash.Vi
                                             public void run() {
                                                 if (!s.endsWith("-folder")) {
                                                     new FileCustom(s, context, fbAuth, FilePath).deleteTrashFile();
-                                                    trash.python_delete("/Trash/" + FilePath);
+//                                                    trash.python_delete("/Trash/" + FilePath);
                                                 } else {
                                                     new FileCustom(s, context, fbAuth, FilePath).DeleteDir();
-                                                    trash.python_delete_folder(FilePath, s);
+//                                                    trash.python_delete_folder(FilePath, s);
                                                 }
-
                                             }
                                         });
 
@@ -200,7 +199,6 @@ public class RecyclerViewTrash extends RecyclerView.Adapter<RecyclerViewTrash.Vi
                                                     new FileCustom(s, context, fbAuth, FilePath).DeleteDir();
                                                     trash.python_delete_folder(FilePath, s);
                                                 }
-
                                             }
                                         });
 
@@ -255,11 +253,11 @@ public class RecyclerViewTrash extends RecyclerView.Adapter<RecyclerViewTrash.Vi
                     Thread thread = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            file.downloadAndOpen();
+                            file.downloadAndOpenTrash();
                         }
                     });
                     thread.start();
-                }else{
+                } else {
                     trash.PathCompare("/" + buf);
                 }
             }

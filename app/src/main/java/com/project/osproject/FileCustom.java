@@ -300,6 +300,42 @@ public class FileCustom {
         }
     }
 
+    public void downloadAndOpenTrash() {
+        FTPClient client = new FTPClient();
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), this.filename);
+        client.setControlEncoding("UTF-8");
+        try {
+            OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
+            client.connect("backup-storage5.hostiman.ru");
+            client.enterLocalPassiveMode();
+            client.login("s222776", "Tmmm8eTKwZ9fHUqh");
+            client.setFileType(FTP.BINARY_FILE_TYPE);
+            if(FilePath != "") {
+                client.retrieveFile(fbAuth.getUid() + "/" + FilePath + "/(deleted) " + this.filename, outputStream);
+            }
+            else{
+                client.retrieveFile(fbAuth.getUid() + "/(deleted) " + this.filename, outputStream);
+            }
+            client.logout();
+            client.disconnect();
+            outputStream.close();
+            System.out.println("ВСЕ ПОЛУЧИЛОСЬ!");
+        } catch (IOException e) {
+            System.out.println("ОШИБКА ПРИ СКАЧИВАНИИ ФАЙЛА С СЕРВЕРА!\n" + e);
+        }
+
+        Uri uriLocal = FileProvider.getUriForFile(this.context, this.context.getApplicationContext().getPackageName() + ".provider", file);
+        try {
+            Intent intent = new Intent();
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setDataAndType(uriLocal, this.context.getContentResolver().getType(uriLocal));
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            //Toast.makeText(this.context, "Не найдено приложений для открытия этого файла", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public void deleteFile() {
         FTPClient client = new FTPClient();
         client.setControlEncoding("UTF-8");

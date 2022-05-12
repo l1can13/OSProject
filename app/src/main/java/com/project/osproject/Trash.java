@@ -151,7 +151,6 @@ public class Trash extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 finish();
-                saveTrash();
             }
         });
 
