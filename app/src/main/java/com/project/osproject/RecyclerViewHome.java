@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.os.Build;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -13,12 +14,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
@@ -27,17 +31,23 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.ViewHolder> {
 
 
     Context context;
     List<String> filenamesList;
+
+
+
 
     boolean isEnable = false;
     boolean isSelectAll = false;
@@ -47,12 +57,17 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
 
     FirebaseAuth fbAuth;
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     RecyclerViewHome(Context context, List<String> filenamesList, FirebaseAuth fbAuth, Home home) {
         this.context = context;
         this.filenamesList = filenamesList;
         this.fbAuth = fbAuth;
         this.home = home;
+
+
     }
+
+
 
     @NonNull
     @Override
@@ -198,7 +213,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                                                     }
                                                                 }
                                                                 new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
-                                                                filenamesList.set(position, input.getText().toString() + "." + typeOfFile.reverse());
+                                                                filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
                                                                 home.saveList();
                                                             }
                                                         });
@@ -310,4 +325,11 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
             recyclerViewItemsParent = itemView.findViewById(R.id.recyclerViewItemsParent);
         }
     }
+
+   public void filterList(LinkedList<String> filteredList){
+        filenamesList = filteredList;
+        notifyDataSetChanged();
+   }
+
+
 }

@@ -65,6 +65,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -76,6 +77,7 @@ public class Home extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
     private ImageButton menuButton;
+    private ImageButton search;
     private ImageButton backButton;
     private FloatingActionButton addButton;
     private NavigationView sideMenu;
@@ -97,6 +99,7 @@ public class Home extends AppCompatActivity {
     private FirebaseAuth fbAuth;
     private DatabaseReference dbReference;
     private Python python;
+
 
 
     /* Уведомления */
@@ -141,11 +144,21 @@ public class Home extends AppCompatActivity {
 
     }
 
+    private void filter(String text){
+        LinkedList<String> filenameListRem = new LinkedList<>();
 
+        for(String item : filenamesList){
+            if(item.toLowerCase().contains(text.toLowerCase())){
+                filenameListRem.add(item);
+            }
+        }
+
+        recyclerViewAdapter.filterList(filenameListRem);
+    }
 
     @SuppressLint({"NotifyDataSetChanged", "RestrictedApi"})
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private List<String> loadList() {
+    public List<String> loadList() {
         List<String> arrayItems = new ArrayList<>();
 
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Data/" + fbAuth.getUid()+FilePath);
@@ -323,7 +336,6 @@ public class Home extends AppCompatActivity {
     }
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -336,6 +348,8 @@ public class Home extends AppCompatActivity {
             String json = fb_SharedPreference_settings.getString("fbAuth", "");
             fbAuth = gson.fromJson(json, FirebaseAuth.class);
         }
+
+
 
         FirebaseUser fbUser = fbAuth.getCurrentUser();
 
@@ -358,6 +372,7 @@ public class Home extends AppCompatActivity {
                 sideMenuHeader = sideMenu.getHeaderView(0);
                 backButton = sideMenuHeader.findViewById(R.id.backButton);
 
+
                 left_side_avatar = sideMenuHeader.findViewById(R.id.userAvatar);
                 left_side_email = sideMenuHeader.findViewById(R.id.userEmail);
                 left_side_username = sideMenuHeader.findViewById(R.id.username);
@@ -376,6 +391,26 @@ public class Home extends AppCompatActivity {
 
                     }
                 });
+
+                findBar.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable editable) {
+                        filter(editable.toString());
+                    }
+                });
+
+
 
                 if(!Python.isStarted())
                     Python.start(new AndroidPlatform(this));

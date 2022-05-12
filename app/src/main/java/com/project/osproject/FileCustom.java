@@ -230,7 +230,7 @@ public class FileCustom {
             intent.setDataAndType(uriLocal, this.context.getContentResolver().getType(uriLocal));
             context.startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this.context, "Не найдено приложений для открытия этого файла", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this.context, "Не найдено приложений для открытия этого файла", Toast.LENGTH_SHORT).show();
         }
     }
 
