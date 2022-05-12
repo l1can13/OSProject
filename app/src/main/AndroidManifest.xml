@@ -40,6 +40,9 @@
             android:name="com.project.osproject.SavedUsers"
             android:exported="true" />
         <activity
+            android:name="com.project.osproject.Trash"
+            android:exported="true" />
+        <activity
             android:name="com.project.osproject.Home"
             android:exported="true">
             <intent-filter>

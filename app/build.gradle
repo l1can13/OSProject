@@ -19,8 +19,8 @@ android {
         }
         python{
             //buildPython "C:/Users/dimon/AppData/Local/Programs/Python/Python39/python.exe"
-            buildPython "C:/Users/volce/AppData/Local/Programs/Python/Python310/python.exe"
-            pip{
+            buildPython "C:/Users/lican/AppData/Local/Programs/Python/Python310/python.exe"
+            pip {
                 install "firebase_admin"
             }
         }

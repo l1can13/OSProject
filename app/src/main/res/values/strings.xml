@@ -43,4 +43,6 @@
     <string name="register">Зарегистрироваться</string>
     <string name="delete">Delete</string>
     <string name="selectAll">Select all</string>
+    <string name="rename">Rename</string>
+    <string name="returnBack">Return</string>
 </resources>
