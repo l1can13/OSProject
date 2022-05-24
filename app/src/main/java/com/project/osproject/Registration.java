@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -49,6 +51,8 @@ public class Registration extends AppCompatActivity {
 
     private StorageReference storageReference;
 
+    private Python python;
+
     private SignInButton googleSignInButton;
     private GoogleSignInClient googleSignInClient;
 
@@ -81,7 +85,7 @@ public class Registration extends AppCompatActivity {
                     public void onSuccess(AuthResult authResult) {
 
                         FirebaseUser FBUser = fbAuth.getCurrentUser();
-                        FireBaseUser user = new FireBaseUser(FBUser.getDisplayName(), FBUser.getEmail(), FBUser.getPhoneNumber());
+                        FireBaseUser user = new FireBaseUser(FBUser.getDisplayName(), FBUser.getEmail(), FBUser.getPhoneNumber(), FBUser.getUid());
                         dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
 
 
@@ -114,6 +118,12 @@ public class Registration extends AppCompatActivity {
         fbAuth = FirebaseAuth.getInstance();
         CircleImageView avatar = findViewById(R.id.userAvatar);
         storageReference = FirebaseStorage.getInstance().getReference();
+
+        if(!Python.isStarted()){
+            Python.start(new AndroidPlatform(this));
+        }
+
+        python = Python.getInstance();
 
         username = findViewById(R.id.username);
         password = findViewById(R.id.password);
@@ -167,7 +177,7 @@ public class Registration extends AppCompatActivity {
                     email.setText("");
                     return;
                 }
-                if (phone.getText().toString().isEmpty() || !isValidPhone(phone.getText().toString())) {
+                if (phone.getText().toString().isEmpty() || !isValidPhone(phone.getText().toString()) || !isNumberExists(phone.getText().toString())) {
                     Toast.makeText(Registration.this, "Некорректный номер телефона!", Toast.LENGTH_SHORT).show();
                     phone.setText("");
                     return;
@@ -191,7 +201,7 @@ public class Registration extends AppCompatActivity {
                                                 }
                                             });
 
-                                    FireBaseUser user = new FireBaseUser(username.getText().toString(), email.getText().toString(), phone.getText().toString());
+                                    FireBaseUser user = new FireBaseUser(username.getText().toString(), email.getText().toString(), phone.getText().toString(), fbAuth.getCurrentUser().getUid());
                                     dbReference.child("User_Info").child(fbAuth.getUid()).setValue(user);
 
                                     SharedPreferences.Editor prefsEditor = sender.edit();
@@ -215,12 +225,17 @@ public class Registration extends AppCompatActivity {
         return !TextUtils.isEmpty(target) && android.util.Patterns.EMAIL_ADDRESS.matcher(target).matches();
     }
 
-    public static boolean isValidPhone(String phone) {
+    public boolean isNumberExists(String phone){
+        return python.getModule("UserLoader").callAttr("PhoneAlreadyRegistred", phone).toJava(Boolean.class);
+    }
+
+    public boolean isValidPhone(String phone) {
 
         return (phone.matches("^((\\+7|7|8)+([0-9]){10})$") || //russian number
                 phone.matches("^((\\+?380)([0-9]{9}))$") || //ukrainian number
                 phone.matches("^(07[\\d]{8,12}|447[\\d]{7,11})$") || //UK number
                 phone.matches("^(\\([0-9]{3}\\) |[0-9]{3}-)[0-9]{3}-[0-9]{4}$") //USA number
+
         );
     }
 
