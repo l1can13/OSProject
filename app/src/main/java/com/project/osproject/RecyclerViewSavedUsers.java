@@ -2,6 +2,7 @@ package com.project.osproject;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.net.Uri;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,27 +23,96 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.chaquo.python.Python;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class RecyclerViewSavedUsers extends RecyclerView.Adapter<RecyclerViewSavedUsers.ViewHolder> {
 
     Context context;
-    List<String> savedUsersList;
-
+    //List<String> savedUsersList;
+    StorageReference profileRef;
     boolean isEnable = false;
     boolean isSelectAll = false;
     ArrayList<String> selectList = new ArrayList<>();
+
+    private Python python;
+
+    private FireBaseUser[] FBUsers_array;
+
     MainViewModel mainViewModel;
 
     FirebaseAuth fbAuth;
 
-    RecyclerViewSavedUsers(Context context, List<String> savedUsersList, FirebaseAuth fbAuth) {
+    RecyclerViewSavedUsers(Context context, FireBaseUser[] FBUsers_array, FirebaseAuth fbAuth, StorageReference ref, Python python) {
         this.context = context;
-        this.savedUsersList = savedUsersList;
+        this.FBUsers_array = FBUsers_array;
         this.fbAuth = fbAuth;
+        this.profileRef = ref;
+        this.python = python;
+    }
+
+
+    private void setAvatar(@NonNull RecyclerViewSavedUsers.ViewHolder avatar, String id){
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("User_Avatar").child(fbAuth.getUid());
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    profileRef.child(id + ".jpg").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).into(avatar.userAvatar);
+                        }
+                    });
+                } else {
+                    StorageReference Ref = FirebaseStorage.getInstance().getReference()
+                            .child("profile_avatars").child("default.jpg");
+                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).into(avatar.userAvatar);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
+    private void remove(String name){
+        int i;
+        for(i = 0; i < FBUsers_array.length; ++i){
+            if(FBUsers_array[i].getUsername().equals(name))
+                break;
+        }
+
+        FireBaseUser[] arrDestination = new FireBaseUser[FBUsers_array.length - 1];
+
+        int remainingElements = FBUsers_array.length - ( i + 1 );
+
+        System.arraycopy(FBUsers_array, 0, arrDestination, 0, i);
+        System.arraycopy(FBUsers_array, i + 1, arrDestination, i, remainingElements);
+
+        FBUsers_array = arrDestination;
+
+        python.getModule("UserLoader").callAttr("delete_by_name", name, fbAuth.getUid());
+
     }
 
     @NonNull
@@ -56,17 +126,13 @@ public class RecyclerViewSavedUsers extends RecyclerView.Adapter<RecyclerViewSav
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerViewSavedUsers.ViewHolder holder, int position) {
-        String buf = savedUsersList.get(position);
+         if(FBUsers_array.length > 0) {
+             FireBaseUser buf = FBUsers_array[position];
+             setAvatar(holder, buf.getId());
+             holder.username.setText(buf.getUsername());
+             holder.userEmail.setText(buf.getEmail());
+         }
 
-        // Тут нужно установить аватар пользователя и textview'шки (имя пользователя и почту)
-        // holder.userAvatar.setImageResource(...);
-        // holder.username.setText(buf);
-        // holder.userEmail.setText(...);
-
-        // holder.recyclerViewItemsParent.setClickListener... - устаналиваем логику на нажатие (если потребуется)
-
-        // Далее - множественный выбор
-        // Здесь устаналивается логика на длительное нажатие (скорее всего тут ничего корректировать не придется)
         holder.recyclerViewItemsParent.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
@@ -100,18 +166,20 @@ public class RecyclerViewSavedUsers extends RecyclerView.Adapter<RecyclerViewSav
                             switch (id) {
                                 case R.id.menu_delete:
                                     for (String s : selectList) {
-                                        savedUsersList.remove(s);
+                                        remove(s);
                                     }
                                     actionMode.finish();
                                     break;
                                 case R.id.menu_select_all:
-                                    if (selectList.size() == savedUsersList.size()) {
+                                    if (selectList.size() == FBUsers_array.length) {
                                         isSelectAll = false;
                                         selectList.clear();
                                     } else {
                                         isSelectAll = true;
                                         selectList.clear();
-                                        selectList.addAll(savedUsersList);
+                                        for(int i = 0; i < FBUsers_array.length; ++i){
+                                            selectList.add(i, FBUsers_array[i].getUsername());
+                                        }
                                     }
                                     mainViewModel.setTextt(String.valueOf(selectList.size()));
                                     notifyDataSetChanged();
@@ -147,7 +215,7 @@ public class RecyclerViewSavedUsers extends RecyclerView.Adapter<RecyclerViewSav
     }
 
     private void ClickItem(RecyclerViewSavedUsers.ViewHolder holder) {
-        String s = savedUsersList.get(holder.getAdapterPosition());
+        String s = FBUsers_array[holder.getAdapterPosition()].getUsername();
         if (holder.checkBox.getVisibility() == View.GONE) {
             holder.checkBox.setVisibility(View.VISIBLE);
             holder.recyclerViewItemsParent.setBackgroundColor(Color.LTGRAY);
@@ -165,7 +233,7 @@ public class RecyclerViewSavedUsers extends RecyclerView.Adapter<RecyclerViewSav
 
     @Override
     public int getItemCount() {
-        return savedUsersList.size();
+        return FBUsers_array.length;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
