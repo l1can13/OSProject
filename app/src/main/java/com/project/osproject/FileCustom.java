@@ -35,6 +35,7 @@ public class FileCustom {
     private boolean flag;
     private FirebaseAuth fbAuth;
     private String FilePath;
+    private String id = "";
 
     public FileCustom(Uri uri, Context context, FirebaseAuth fbAuth) {
         this.context = context;
@@ -73,6 +74,14 @@ public class FileCustom {
         this.context = context;
         this.filename = filename;
         this.fbAuth = fbAuth;
+        this.uploadDate = Calendar.getInstance();
+        this.FilePath = FilePath;
+    }
+
+    public FileCustom(String filename, Context context, String ID, String FilePath) {
+        this.context = context;
+        this.filename = filename;
+        this.id = ID;
         this.uploadDate = Calendar.getInstance();
         this.FilePath = FilePath;
     }
@@ -269,16 +278,18 @@ public class FileCustom {
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), this.filename);
         client.setControlEncoding("UTF-8");
         try {
+            if(id.isEmpty())
+                id = fbAuth.getUid();
             OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
             client.connect("backup-storage5.hostiman.ru");
             client.enterLocalPassiveMode();
             client.login("s222776", "Tmmm8eTKwZ9fHUqh");
             client.setFileType(FTP.BINARY_FILE_TYPE);
             if(FilePath != "") {
-                client.retrieveFile(fbAuth.getUid() + "/" + FilePath + "/" + this.filename, outputStream);
+                client.retrieveFile(id + "/" + FilePath + "/" + this.filename, outputStream);
             }
             else{
-                client.retrieveFile(fbAuth.getUid() + "/" + this.filename, outputStream);
+                client.retrieveFile(id + "/" + this.filename, outputStream);
             }
             client.logout();
             client.disconnect();
