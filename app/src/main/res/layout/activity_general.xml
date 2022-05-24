@@ -69,6 +69,13 @@
             android:background="@color/middleGreen"
             android:orientation="vertical" />
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/header"
+            android:layout_marginTop="48dp" />
+
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomMenu"
             android:layout_width="match_parent"
