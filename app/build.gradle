@@ -18,7 +18,12 @@ android {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
         python{
-            buildPython "C:/Users/lican/AppData/Local/Programs/Python/Python310/python.exe"
+            //Просто раскомментите свою строку
+
+            buildPython "C:/Users/volce/AppData/Local/Programs/Python/Python310/python.exe"
+
+            //buildPython "C:/Users/lican/AppData/Local/Programs/Python/Python310/python.exe"
+            //buildPython "C:/Users/dimon/AppData/Local/Programs/Python/Python39/python.exe"
             pip {
                 install "firebase_admin"
             }
