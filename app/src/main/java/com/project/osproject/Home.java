@@ -97,8 +97,6 @@ public class Home extends AppCompatActivity {
     private DatabaseReference dbReference;
     private Python python;
 
-
-
     /* Уведомления */
     private static final int NOTIFY_ID = 101;
     private static String CHANNEL_ID = "Test channel";

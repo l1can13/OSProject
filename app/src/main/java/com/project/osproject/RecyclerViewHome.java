@@ -2,6 +2,7 @@ package com.project.osproject;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
@@ -18,8 +19,11 @@ import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -149,7 +153,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                             mainViewModel.getTextt().observe((LifecycleOwner) context, new Observer<String>() {
                                 @Override
                                 public void onChanged(String s) {
-                                    actionMode.setTitle(String.format("%s Selected", s));
+                                    actionMode.setTitle(String.format("%s выбрано", s));
                                 }
                             });
                             return true;
@@ -159,6 +163,39 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                         public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
                             int id = menuItem.getItemId();
                             switch (id) {
+                                case R.id.share:
+                                    // Сюда писать логику для расшаривания
+                                    final String[] items = filenamesList.toArray(new String[0]); // тут надо filenamesList поменять на список сохраненных пользователей
+                                    final ArrayList itemsSelected = new ArrayList();
+
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                                    builder.setTitle("Выберите пользователей");
+                                    builder.setMultiChoiceItems(items, null,
+                                            new DialogInterface.OnMultiChoiceClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int selectedItemId, boolean isSelected) {
+                                                    if (isSelected) {
+                                                        itemsSelected.add(selectedItemId);
+                                                    } else if (itemsSelected.contains(selectedItemId)) {
+                                                        itemsSelected.remove(Integer.valueOf(selectedItemId));
+                                                    }
+                                                }
+                                            })
+                                            .setPositiveButton("Ок", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int id) {
+                                                    // itemsSelected - туда сохраняются выбранные пользователи
+                                                }
+                                            })
+                                            .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int id) {
+
+                                                }
+                                            });
+
+                                    builder.create().show();
+                                    break;
                                 case R.id.menu_delete:
                                     for (String s : selectList) {
                                         Thread thread = new Thread(new Runnable() {

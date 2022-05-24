@@ -194,7 +194,6 @@ public class RecyclerViewSavedUsers extends RecyclerView.Adapter<RecyclerViewSav
                             isSelectAll = false;
                             selectList.clear();
                             notifyDataSetChanged();
-
                         }
                     };
                     ((AppCompatActivity) view.getContext()).startActionMode(callback);

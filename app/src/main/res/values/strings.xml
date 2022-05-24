@@ -42,7 +42,8 @@
     <string name="enterEmail">Введите почту, к которой привязан аккаунт:</string>
     <string name="register">Зарегистрироваться</string>
     <string name="delete">Delete</string>
-    <string name="selectAll">Select all</string>
-    <string name="rename">Rename</string>
-    <string name="returnBack">Return</string>
+    <string name="selectAll">Выбрать все</string>
+    <string name="rename">Переименовать</string>
+    <string name="returnBack">Вернуть из корзины</string>
+    <string name="share">Поделиться</string>
 </resources>
