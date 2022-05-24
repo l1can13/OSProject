@@ -21,7 +21,6 @@ def Save(path, save_list):
     ref = db.reference(path)
 
     FBlist = ref.get()
-
     x = path.split("/")
     x = [i for i in x if i]
 
@@ -43,6 +42,10 @@ def Save(path, save_list):
         ref.set(FBlist)
 
     elif isinstance(FBlist, list):
+        ref.set([i for i in save_list])
+    elif FBlist is None and save_list is None:
+        ref.set([])
+    elif FBlist is None and not save_list is None:
         ref.set([i for i in save_list])
     else:
         ref.set([i for i in save_list])
