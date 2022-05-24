@@ -1,5 +1,6 @@
 package com.project.osproject;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -14,18 +15,26 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -43,6 +52,9 @@ import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -55,9 +67,19 @@ public class General extends AppCompatActivity {
     private ImageButton backButton;
     private View sideMenuHeader;
 
+    private EditText findBar;
+
+    private RecyclerViewGeneral recyclerViewAdapter;
+    private RecyclerView recyclerView;
+
     private FirebaseAuth fbAuth;
     private DatabaseReference dbReference;
+    private Python python;
 
+    private String FilePath = "";
+    private String cur_id = "";
+
+    private List<String> shared_list;
 
     private NotificationManager notificationManager;
 
@@ -105,10 +127,49 @@ public class General extends AppCompatActivity {
     }
 
 
+    public boolean isNewShared(){
+        return python.getModule("UserLoader").callAttr("get_shared_status", fbAuth.getUid()).toJava(Boolean.class);
+    }
+
+    private void load_shared_list(){
+        shared_list = new ArrayList<String>(Arrays.asList(python.getModule("UserLoader")
+                .callAttr("load_shared_folder_list", fbAuth.getUid())
+                .toJava(String[].class)));
+    }
+
+
+    public void setID(String id){
+        cur_id = id;
+
+        try {
+            shared_list = new ArrayList<String>(Arrays.asList(python.getModule("main")
+                    .callAttr("loader", "User_Data/" + cur_id + "/Current/" + FilePath)
+                    .toJava(String[].class)));
+            recyclerView.setAdapter(new RecyclerViewGeneral(this, shared_list, this,  "/", cur_id));
+        } catch (NullPointerException e) {
+            Toast.makeText(this, "Попробуйте еще раз!", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    public void PathCompare(String path){
+        FilePath += path;
+        try {
+            shared_list = new ArrayList<String>(Arrays.asList(python.getModule("main")
+                    .callAttr("loader", "User_Data/" + cur_id + "/Current/" + FilePath)
+                    .toJava(String[].class)));
+            recyclerView.setAdapter(new RecyclerViewGeneral(this, shared_list, this,  FilePath, cur_id));
+        } catch (NullPointerException e) {
+            Toast.makeText(this, "Попробуйте еще раз!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_general);
+
+        recyclerView = findViewById(R.id.recyclerView);
 
         bottomNavigationView = findViewById(R.id.bottomMenu);
         menuButton = findViewById(R.id.menu);
@@ -116,9 +177,36 @@ public class General extends AppCompatActivity {
         sideMenu = findViewById(R.id.navigationView);
         notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
+        findBar = findViewById(R.id.search);
+
         bottomNavigationView.setSelectedItemId(R.id.generalItem);
         sideMenuHeader = sideMenu.getHeaderView(0);
         backButton = sideMenuHeader.findViewById(R.id.backButton);
+
+        if(!Python.isStarted()){
+            Python.start(new AndroidPlatform(this));
+        }
+
+        python = Python.getInstance();
+
+        fbAuth = FirebaseAuth.getInstance();
+
+        if(isNewShared()){
+            ShowWindow();
+        }
+
+        load_shared_list();
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        recyclerViewAdapter = new RecyclerViewGeneral(this, shared_list, this, FilePath, cur_id);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ActivityCompat.requestPermissions(General.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
+        }
+        ActivityCompat.requestPermissions(General.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+
+        recyclerView.setAdapter(recyclerViewAdapter);
+
 
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -131,6 +219,24 @@ public class General extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+
+        findBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                filter(editable.toString());
             }
         });
 
@@ -248,5 +354,37 @@ public class General extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void filter(String text){
+        LinkedList<String> filenameListRem = new LinkedList<>();
+
+
+        for(String item : shared_list){
+            if(item.toLowerCase().contains(text.toLowerCase())){
+                filenameListRem.add(item);
+            }
+        }
+
+        recyclerViewAdapter.filterList(filenameListRem);
+    }
+
+    private void ShowWindow() {
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(General.this)
+                .setTitle("С Вами поделились файлами!")
+                .setNeutralButton("Ок", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        setAllAccept();
+                        dialogInterface.cancel();
+                    }
+                });
+        dialog.show();
+
+    }
+
+    private void setAllAccept() {
+        python.getModule("UserLoader").callAttr("setAllAccept", fbAuth.getUid());
     }
 }
