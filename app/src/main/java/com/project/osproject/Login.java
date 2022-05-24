@@ -70,7 +70,7 @@ public class Login extends AppCompatActivity {
                     public void onSuccess(AuthResult authResult) {
 
                         FirebaseUser FBUser = fbAuthLogin.getCurrentUser();
-                        FireBaseUser user = new FireBaseUser(FBUser.getDisplayName(), FBUser.getEmail(), FBUser.getPhoneNumber());
+                        FireBaseUser user = new FireBaseUser(FBUser.getDisplayName(), FBUser.getEmail(), FBUser.getPhoneNumber(), FBUser.getUid());
                         dbReference.child("User_Info").child(fbAuthLogin.getUid()).setValue(user);
 
 
