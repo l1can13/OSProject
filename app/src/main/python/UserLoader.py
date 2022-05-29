@@ -202,10 +202,13 @@ def delete_by_name(name, id):
 
     for i in list(FBList):
         if FBList[i.strip()]["username"] == name:
+            delete_id = FBList[i.strip()]["id"]
             del FBList[i.strip()]
             ref_id = db.reference("User_Shared_ID/" + i.strip())
             FBlist_id = ref_id.get()
             del FBlist_id[id]
+            ref_files = db.reference("User_Data/" + delete_id + "/Shared/" + id + "-folder")
+            ref_files.set([])
             ref_id.set(FBlist_id)
 
     ref.set(FBList)
