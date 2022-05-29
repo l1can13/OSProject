@@ -17,14 +17,14 @@ def Save(path, save_list):
     })
     if not firebase_admin._apps:
         def_app = firebase_admin.initialize_app(cred, {'databaseURL': 'https://galvanic-axle-343014-default-rtdb.firebaseio.com'})
-
+    print("PATH", path)
     ref = db.reference(path)
 
     FBlist = ref.get()
     x = path.split("/")
     x = [i for i in x if i]
 
-    if save_list == [] and len(x) == 2:
+    if save_list == [] and len(x) == 3:
         ref.set([])
 
     elif isinstance(FBlist, dict):
@@ -49,7 +49,7 @@ def Save(path, save_list):
         ref.set([i for i in save_list])
     else:
         ref.set([i for i in save_list])
-
+    if x[len(x)-1].endswith("-folder"):
         folder = x[len(x)-1]
         path = ""
         for i in range(len(x)-1):
@@ -82,7 +82,6 @@ def loader(path):
         def_app = firebase_admin.initialize_app(cred, {'databaseURL': 'https://galvanic-axle-343014-default-rtdb.firebaseio.com'})
 
     FBList = db.reference(path).get()
-
     if isinstance(FBList, list):
         return FBList
     elif isinstance(FBList, dict):
@@ -111,6 +110,7 @@ def delete(path):
     if not firebase_admin._apps:
         def_app = firebase_admin.initialize_app(cred, { 'databaseURL': 'https://galvanic-axle-343014-default-rtdb.firebaseio.com'})
     FBList = db.reference(path).get()
+
     if FBList is None:
         x = path.split("/")
         x = [i for i in x if i]

@@ -38,8 +38,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
+import com.chaquo.python.Python;
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -47,28 +49,32 @@ import java.util.Locale;
 public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.ViewHolder> {
 
 
-    Context context;
-    List<String> filenamesList;
-
-
-
+    private Context context;
+    private List<String> filenamesList;
+    private List<String> shared_list;
 
     boolean isEnable = false;
     boolean isSelectAll = false;
-    ArrayList<String> selectList = new ArrayList<>();
-    MainViewModel mainViewModel;
-    Home home;
+    private ArrayList<String> selectList = new ArrayList<>();
+    private MainViewModel mainViewModel;
+    private Home home;
     private String FilePath;
+    private Python python;
 
-    FirebaseAuth fbAuth;
+    private FirebaseAuth fbAuth;
 
     @RequiresApi(api = Build.VERSION_CODES.S)
-    RecyclerViewHome(Context context, List<String> filenamesList, FirebaseAuth fbAuth, Home home, String Filepath) {
+    RecyclerViewHome(Context context, List<String> filenamesList, FirebaseAuth fbAuth, Home home, String Filepath, Python python) {
         this.context = context;
         this.filenamesList = filenamesList;
         this.fbAuth = fbAuth;
         this.home = home;
         this.FilePath = Filepath;
+        this.python = python;
+    }
+
+    private void delete_shared_files(String path){
+        python.getModule("UserLoader").callAttr("delete_shared_files", fbAuth.getUid(), path);
     }
 
     @NonNull
@@ -165,7 +171,18 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                             switch (id) {
                                 case R.id.share:
                                     // Сюда писать логику для расшаривания
-                                    final String[] items = filenamesList.toArray(new String[0]); // тут надо filenamesList поменять на список сохраненных пользователей
+                                    // тут надо filenamesList поменять на список сохраненных пользователей
+                                    shared_list = new ArrayList<String>(Arrays.asList(python.getModule("UserLoader")
+                                            .callAttr("get_shared_users_for_home", fbAuth.getUid())
+                                            .toJava(String[].class)));
+
+                                    List<String> list_for_share = new LinkedList<>();
+
+                                    for(String s : selectList)
+                                        list_for_share.add(s);
+
+
+                                    final String[] items = shared_list.toArray(new String[0]);
                                     final ArrayList itemsSelected = new ArrayList();
 
                                     AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -175,7 +192,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int selectedItemId, boolean isSelected) {
                                                     if (isSelected) {
-                                                        itemsSelected.add(selectedItemId);
+                                                        itemsSelected.add(items[selectedItemId]);
                                                     } else if (itemsSelected.contains(selectedItemId)) {
                                                         itemsSelected.remove(Integer.valueOf(selectedItemId));
                                                     }
@@ -184,6 +201,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                             .setPositiveButton("Ок", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int id) {
+                                                     python.getModule("UserLoader").callAttr("share_files", itemsSelected.toArray(new String[0]), selectList.toArray(new String[0]), "User_Data/" + fbAuth.getUid() + "/Current/" + FilePath);
                                                     // itemsSelected - туда сохраняются выбранные пользователи
                                                 }
                                             })
@@ -224,6 +242,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                         else {
                                             filenamesList.remove(s);
                                         }
+                                        delete_shared_files(FilePath + "/" + s);
                                     }
                                     actionMode.finish();
                                     break;
@@ -242,7 +261,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                 case R.id.menu_rename:
                                     final EditText input = new EditText(context);
                                     AlertDialog.Builder dialog = new AlertDialog.Builder(context)
-                                            .setTitle("Введите нового файла")
+                                            .setTitle("Введите новое название файла")
                                             .setView(input)
                                             .setPositiveButton("Применить", new DialogInterface.OnClickListener() {
                                                 @Override

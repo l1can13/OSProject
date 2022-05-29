@@ -111,7 +111,7 @@ public class RecyclerViewGeneral extends RecyclerView.Adapter<RecyclerViewGenera
             @Override
             public void onClick(View view) {
                 if (!buf.endsWith("-folder")) {
-
+                    System.out.println("PATH TO FTP " + FilePath + "    " + buf + "   " + CurId);
                     FileCustom file = new FileCustom(buf, context, CurId, FilePath);
                     Thread thread = new Thread(new Runnable() {
                         @Override
@@ -129,7 +129,6 @@ public class RecyclerViewGeneral extends RecyclerView.Adapter<RecyclerViewGenera
                         for (int i = 0; buf.charAt(i) != '-'; ++i) {
                             id_folder.append(buf.charAt(i));
                         }
-
                         home.setID(id_folder.toString());
 
                     }else

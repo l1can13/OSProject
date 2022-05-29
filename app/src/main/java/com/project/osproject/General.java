@@ -126,24 +126,49 @@ public class General extends AppCompatActivity {
 
     }
 
+    private void FilePathConverter() {
+        String[] splitter = FilePath.split("/");
+        FilePath = "";
+        for (int i = 3; i < splitter.length; ++i)
+            FilePath += "/" + splitter[i];
+    }
+
+    public void python_getBack() {
+        FilePath = python.getModule("main").callAttr("back", "User_Data/" + fbAuth.getUid() + "/Shared/" + FilePath).toJava(String.class);
+        shared_list = new ArrayList<String>(Arrays.asList(python.getModule("main")
+                .callAttr("loader", FilePath)
+                .toJava(String[].class)));
+        FilePathConverter();
+        recyclerView.setAdapter(new RecyclerViewGeneral(this, shared_list, this,  FilePath, cur_id));
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!FilePath.isEmpty())
+            python_getBack();
+        else {
+            //saveList();
+            super.onBackPressed();
+        }
+    }
+
 
     public boolean isNewShared(){
         return python.getModule("UserLoader").callAttr("get_shared_status", fbAuth.getUid()).toJava(Boolean.class);
     }
 
     private void load_shared_list(){
-        shared_list = new ArrayList<String>(Arrays.asList(python.getModule("UserLoader")
-                .callAttr("load_shared_folder_list", fbAuth.getUid())
+        shared_list = new ArrayList<String>(Arrays.asList(python.getModule("main")
+                .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/Shared")
                 .toJava(String[].class)));
     }
 
 
     public void setID(String id){
         cur_id = id;
-
         try {
             shared_list = new ArrayList<String>(Arrays.asList(python.getModule("main")
-                    .callAttr("loader", "User_Data/" + cur_id + "/Current/" + FilePath)
+                    .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/Shared/" + cur_id + "-folder")
                     .toJava(String[].class)));
             recyclerView.setAdapter(new RecyclerViewGeneral(this, shared_list, this,  "/", cur_id));
         } catch (NullPointerException e) {
@@ -156,7 +181,7 @@ public class General extends AppCompatActivity {
         FilePath += path;
         try {
             shared_list = new ArrayList<String>(Arrays.asList(python.getModule("main")
-                    .callAttr("loader", "User_Data/" + cur_id + "/Current/" + FilePath)
+                    .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/Shared/" + cur_id + "-folder/" + FilePath)
                     .toJava(String[].class)));
             recyclerView.setAdapter(new RecyclerViewGeneral(this, shared_list, this,  FilePath, cur_id));
         } catch (NullPointerException e) {

@@ -117,15 +117,15 @@ public class Home extends AppCompatActivity {
     }
 
     public void python_rename_folder(String path, String old_name, String new_name) {
-        python.getModule("main").callAttr("folder_rename", "User_Data/" + fbAuth.getUid() + path, old_name, new_name);
+        python.getModule("main").callAttr("folder_rename", "User_Data/" + fbAuth.getUid() + "/Current/" + path, old_name, new_name);
     }
 
     public void python_delete_folder(String path, String name) {
-        python.getModule("main").callAttr("delete_folder", "User_Data/" + fbAuth.getUid() + path, name);
+        python.getModule("main").callAttr("delete_folder", "User_Data/" + fbAuth.getUid() + "/Current/" + path, name);
     }
 
     public void python_delete(String path) {
-        python.getModule("main").callAttr("delete", "User_Data/" + fbAuth.getUid() + path);
+        python.getModule("main").callAttr("delete", "User_Data/" + fbAuth.getUid() + "/Current/" + path);
     }
 
     public void saveList() {
@@ -142,23 +142,24 @@ public class Home extends AppCompatActivity {
                 .callAttr("loader", FilePath)
                 .toJava(String[].class)));
         FilePathConverter();
-        recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath));
+        recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath, python));
     }
 
     private void FilePathConverter() {
         String[] splitter = FilePath.split("/");
         FilePath = "";
-        for (int i = 2; i < splitter.length; ++i)
+        for (int i = 3; i < splitter.length; ++i)
             FilePath += "/" + splitter[i];
     }
 
     public void PathCompare(String path) {
+
         FilePath += path;
         try {
             filenamesList = new ArrayList<String>(Arrays.asList(python.getModule("main")
                     .callAttr("loader", "User_Data/" + fbAuth.getUid() + "/Current/" + FilePath)
                     .toJava(String[].class)));
-            recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath));
+            recyclerView.setAdapter(new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath, python));
         } catch (NullPointerException e) {
             Toast.makeText(this, "Попробуйте еще раз!", Toast.LENGTH_SHORT).show();
         }
@@ -492,9 +493,11 @@ public class Home extends AppCompatActivity {
 
                 setAvatar(FirebaseStorage.getInstance().getReference().child("profile_avatars").child(fbAuth.getUid() + ".jpg"));
 
+                python = Python.getInstance();
+
                 recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-                recyclerViewAdapter = new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath);
+                recyclerViewAdapter = new RecyclerViewHome(this, filenamesList, fbAuth, this, FilePath, python);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
                 }
@@ -504,7 +507,7 @@ public class Home extends AppCompatActivity {
 
                 bottomNavigationView.setSelectedItemId(R.id.homeItem);
 
-                python = Python.getInstance();
+
 
                 addButton.setOnClickListener(new View.OnClickListener() {
                     @Override
