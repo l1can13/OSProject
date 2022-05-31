@@ -381,7 +381,7 @@ def delete_shared_files(cur_id, path):
             if isinstance(FBList, list):
                 FBList.remove(file_name)
                 ref.set(FBList)
-            else:
+            elif isinstance(FBList, dict):
                 ckecker = 0
                 if file_name.endswith("-folder"):
                     for i in list(FBList):
@@ -405,6 +405,7 @@ def delete_shared_files(cur_id, path):
                     ref.set(FBList)
                 elif ckecker == 2:
                     ref.set(FBList)
+
 
 def share_files(users_list, files_list, path_to_files):
     """ Делимся выбранными файлами с выбранными пользователями """
