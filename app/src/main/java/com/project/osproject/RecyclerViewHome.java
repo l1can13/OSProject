@@ -292,7 +292,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
 
                                                                 }
 
-                                                                new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
+                                                                new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + "." + typeOfFile);
                                                                 filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
                                                                 home.saveList();
                                                             }
