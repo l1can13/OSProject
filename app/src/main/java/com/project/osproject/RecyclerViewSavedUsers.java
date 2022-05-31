@@ -143,7 +143,7 @@ public class RecyclerViewSavedUsers extends RecyclerView.Adapter<RecyclerViewSav
                         @Override
                         public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
                             MenuInflater menuInflater = actionMode.getMenuInflater();
-                            menuInflater.inflate(R.menu.menu_delete, menu);
+                            menuInflater.inflate(R.menu.menu_delete_saved_users, menu);
                             return true;
                         }
 
