@@ -434,15 +434,23 @@ def share_files(users_list, files_list, path_to_files):
     FBList = ref.get()
     #проверяем, есть ли в списке файлов папки
     dict_for_set = {}
-    for i in list(files_list):
-        if i in FBList:
-            dict_for_set[i] = FBList[i]
+    if isinstance(FBList, dict):
+        for i in files_list:
+            if i in FBList:
+                dict_for_set[i] = FBList[i]
+    else:
+        counter = 0
+        for i in files_list:
+            if i in FBList:
+                dict_for_set[counter] = i
+                counter += 1
 
     #формируем список индексов для не папок
     keys = [str(i) for i in range(len(files_list) - len(dict_for_set))]
+
     #обновляем список файлов, убирая папки
     files_list = [i for i in files_list if not i in FBList]
-
+    #files_list = [i for i in files_list if not i in FBList.keys()]
     #обновляем наш словарь
     dict_for_set.update(dict(zip(keys, files_list)))
 
@@ -455,7 +463,7 @@ def share_files(users_list, files_list, path_to_files):
     for i in range(3, len(x)):
         path += x[i]
     #добавляем файлы в наш список
-    id_list = get_id_by_email(list(users_list))
+    id_list = get_id_by_email(users_list)
     for id in id_list:
         ref_shared = db.reference("User_Data/"+id+"/Shared/"+cur_id+"-folder/"+path)
         #проверка на то, есть ли такие файлы уже в списке
@@ -463,20 +471,23 @@ def share_files(users_list, files_list, path_to_files):
         if isinstance(Shared_list, dict):
             for i in list(Shared_list):
                 for j in list(dict_for_set):
-                    if dict_for_set[j] == Shared_list[i]:
-                        del dict_for_set[j]
-
+                    #print(Shared_list, dict_for_set)
+                    if isinstance(dict_for_set, dict):
+                        if dict_for_set[j] == Shared_list[i]:
+                            del dict_for_set[j]
             #добавляем наш список к итоговому
             keys = [i for i in Shared_list.keys() if i.isdigit()]
             length = len(keys)
-            keys = [i for i in range(int(keys[length-1])+1, length + len(dict_for_set))]
-
-            dict_for_set = [dict_for_set[i] for i in dict_for_set]
+            if length != 0:
+                keys = [i for i in range(int(keys[length-1])+1, length + len(dict_for_set))]
+            else:
+                keys = ["0"]
+            if isinstance(dict_for_set, dict):
+                dict_for_set = [dict_for_set[i] for i in dict_for_set]
 
             Shared_list.update(dict(zip(keys, dict_for_set)))
             ref_shared.set(Shared_list)
         elif isinstance(Shared_list, list):
-            print(Shared_list)
             for i in list(dict_for_set):
                 if i.isdigit():
                     for j in range(len(Shared_list)):
