@@ -335,8 +335,9 @@ def get_shared_users_for_home(cur_id):
     ref = db.reference("User_Shared/" + cur_id)
     FBList = ref.get()
     email_list = []
-    for i in list(FBList):
-        email_list.append(FBList[i]["email"])
+    if not FBList is None:
+        for i in list(FBList):
+            email_list.append(FBList[i]["email"])
 
     return email_list
 

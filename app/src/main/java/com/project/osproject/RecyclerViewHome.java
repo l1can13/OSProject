@@ -201,18 +201,20 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                             .setPositiveButton("Ок", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int id) {
-                                                     python.getModule("UserLoader").callAttr("share_files", itemsSelected.toArray(new String[0]), selectList.toArray(new String[0]), "User_Data/" + fbAuth.getUid() + "/Current/" + FilePath);
+                                                    python.getModule("UserLoader").callAttr("share_files", itemsSelected.toArray(new String[0]), selectList.toArray(new String[0]), "User_Data/" + fbAuth.getUid() + "/Current/" + FilePath);
                                                     // itemsSelected - туда сохраняются выбранные пользователи
                                                 }
                                             })
                                             .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int id) {
-
+                                                    dialog.cancel();
                                                 }
                                             });
-
-                                    builder.create().show();
+                                    if(shared_list.size() != 0)
+                                        builder.create().show();
+                                    else
+                                        Toast.makeText(context, "У вас нет друзей!", Toast.LENGTH_SHORT).show();
                                     break;
                                 case R.id.menu_delete:
                                     for (String s : selectList) {
@@ -299,7 +301,7 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                                     }
                                                     else{
                                                         AlertDialog.Builder dialog = new AlertDialog.Builder(context)
-                                                                .setTitle("Выберите только один файл!")
+                                                                .setTitle("Выберите хотя бы один файл!")
                                                                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                                                     @Override
                                                                     public void onClick(DialogInterface dialogInterface, int i) {
