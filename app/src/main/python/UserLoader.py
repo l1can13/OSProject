@@ -426,9 +426,6 @@ def share_files(users_list, files_list, path_to_files):
         def_app = firebase_admin.initialize_app(cred, {
             'databaseURL': 'https://galvanic-axle-343014-default-rtdb.firebaseio.com'})
 
-    #print(users_list)
-    #print(files_list)
-    #print(path_to_files)
 
     ref = db.reference(path_to_files)
     FBList = ref.get()
@@ -444,16 +441,16 @@ def share_files(users_list, files_list, path_to_files):
             if i in FBList:
                 dict_for_set[counter] = i
                 counter += 1
-
     #формируем список индексов для не папок
     keys = [str(i) for i in range(len(files_list) - len(dict_for_set))]
-
+    if len(keys) == 0:
+        keys = ["0"]
     #обновляем список файлов, убирая папки
     files_list = [i for i in files_list if not i in FBList]
     #files_list = [i for i in files_list if not i in FBList.keys()]
+
     #обновляем наш словарь
     dict_for_set.update(dict(zip(keys, files_list)))
-
     #обновляем путь до наших файлов
     # "User_Data/id/Shared/cur_id-folder/path"
     x = path_to_files.split("/")
@@ -484,7 +481,6 @@ def share_files(users_list, files_list, path_to_files):
                 keys = ["0"]
             if isinstance(dict_for_set, dict):
                 dict_for_set = [dict_for_set[i] for i in dict_for_set]
-
             Shared_list.update(dict(zip(keys, dict_for_set)))
             ref_shared.set(Shared_list)
         elif isinstance(Shared_list, list):
@@ -494,12 +490,14 @@ def share_files(users_list, files_list, path_to_files):
                         if dict_for_set[i] == Shared_list[j]:
                             Shared_list.remove(dict_for_set[i])
                             break
-
-            keys = [i for i in dict_for_set.keys() if i.isdigit()]
-            length = len(keys)
-            if length > 0:
-                keys = [i for i in range(int(keys[length - 1]) + 1, length + len(Shared_list))]
-            dict_for_set.update(dict(zip(keys, Shared_list)))
+            if len(dict_for_set) > 0:
+                keys = [i for i in dict_for_set.keys() if i.isdigit()]
+                length = len(keys)
+                if length > 0:
+                    keys = [i for i in range(int(keys[length - 1]) + 1, length + len(Shared_list))]
+                else:
+                    keys = ["0"]
+                dict_for_set.update(dict(zip(keys, Shared_list)))
             ref_shared.set(dict_for_set)
         else:
             ref_shared.set(dict_for_set)
