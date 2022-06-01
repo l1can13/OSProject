@@ -379,8 +379,9 @@ def delete_shared_files(cur_id, path):
             ref = db.reference("User_Data/"+id+"/Shared/"+cur_id+"-folder/"+path)
             FBList = ref.get()
             if isinstance(FBList, list):
-                FBList.remove(file_name)
-                ref.set(FBList)
+                if file_name in FBList:
+                    FBList.remove(file_name)
+                    ref.set(FBList)
             elif isinstance(FBList, dict):
                 ckecker = 0
                 if file_name.endswith("-folder"):
@@ -395,7 +396,7 @@ def delete_shared_files(cur_id, path):
                             ckecker = 1
                 if ckecker == 1:
                     #перебираем ключи, чтоб всё шло по порядку
-                    int_keys = [i for i in FBList.keys() if i.isdigit()]
+                    int_keys = [str(i) for i in FBList.keys() if str(i).isdigit()]
                     int_keys_values = [FBList[i] for i in int_keys]
                     for i in list(FBList):
                         if i.isdigit():
@@ -406,6 +407,70 @@ def delete_shared_files(cur_id, path):
                 elif ckecker == 2:
                     ref.set(FBList)
 
+def rename_shared_files(cur_id, path, new_name):
+    cred = credentials.Certificate({
+        "type": "service_account",
+        "project_id": "galvanic-axle-343014",
+        "private_key_id": "60d6ab518257658e2af0ee5f475c5ab3693ba16c",
+        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCgrtGvFAsNVl1X\ntN8PhPYEkGsFr1y18rtQucU+FjotyXNmpzmHIrDk5nR/KzTcFR5K0uPM9cJVFTSq\ntffTCS9dbdQaG8irVsy5h44WYnOCEd6aOShgb86zzPI50QjP9b2rufBljd2Bxi92\nO7i+xfu/aL/tv7tOUyOayIGQQfZDusO8kTrA3+QuNK53iB9bzPKgxjfZ8lRhHgNi\nGRRlX69BEk0y5h4LyQnMqGVzNUy3Y2XNq6t3xaAL3Z3kSTYsFhzwoOj6Ao0HjqCQ\nr4GBYyl4ofkNlUsHg1zXvApOj5eOHwBYxIPGK3msolknypJu4O9iHPxkFhp0XxiW\n5LaIq1DPAgMBAAECggEAMuU80JZqK8bT2SCW2O0WGfr+kzXpCU7Byz+UfOaAdhlN\nntHQFIBGBLMEanVukFl2F2A2PKkJbXbCkGIEBgnuQUs0+DIdvTvIq+mGdYuop6Xu\nWu5I3kb785KylOKjxm9BrT+/qAMoCt+SEAK5sV+3rnjI9k8ZTqVh7TieZWmnTes8\n2c7y9sgRJCcKyc0j6sOsVtxEiw51XPN/JIjrIWwcOqYYBq5C2AKNEHGWYIvQGpCA\nV6ncoTrHOV/ZCxo704rMg05Q+jC7gkLLL5x+//DwvBXRI8oJ29g/N9g5tOcmkA9/\nsyRG1mHMksqmIiuQpckwkuGRGvyQXjJJc5uHAUKAvQKBgQDfQohfFCT/wj2o8MB1\n00S3bDCXJVYBHltf41yeEmc2lOl0vhI2NQcGUSob/6j91rNxXuFmTK69k072i2qC\nhItse19neMZO4P4pGqA895anFzcLCuvJHITaP/4Z2DWzIWSPTjlHMVYqqh7qDCNZ\nW5ONX7a1Zn8i5G6P0ry/+i4CmwKBgQC4PxBjyJBMJvN9Np7xyIRlB6zTdIBNE8am\n0wuQ0NsQKliGtVWfYiBfji5YUoz44taICTgC/fkKgxNn3gSxOk6P/4WD13qJc6TE\nKb7BRJWnL5teQ4pHwQz8ytdt9dmxOxJP6KLzsHsGQRpufMrShywhawf6gtzeSLTR\nxlVAiNXD3QKBgGmFKa0+eSpEpR33BA/sVbsXsHOPmvGWZnuQm1K+wfejNCAQQc1L\nDNHohK2NDVNEKbW4sXHHZoOFXznZtPKRMNCKExJ1m8zmPFozEm8eWh8JMuPOOpjo\nGMaKnk+ax+6tJrkwsJO8dsxdcZUPPZnbVYbpKRLdqdNVAgiKAtn9pcdnAoGAPKSt\nPVqvfBE6BZWr3UM1qJdNIFBxRm1i7lf6r5C++eQmPTiEVTCUHT+MK5AITIdFO4Nl\nRz7W8MnR4lcmTjs1zpm5FXsgHwvMSLDA05ZCd8PorK8oXZPCNZaCL/RC0d3ymhCl\nSfZll9pn28QBcigBs4IqHx9hmVxu/7j7KIGhcpUCgYEA2+BCZmUp/LtNFbSMdiRi\n25gvItbWiHNhqfFuK7inaFDUQbidL9j6lE/5GTNHtCHdm2yk3LstwfE8QOoKLJOc\nthVSQym3ezeeBWBDeixM82XcI7hamgTjnLrODSRU9sCzBq+aD2A2t05NdUDvPwNt\nMfQOCOobIdqA0EwKRcNkJzM=\n-----END PRIVATE KEY-----\n",
+        "client_email": "galvanic-axle-343014@appspot.gserviceaccount.com",
+        "client_id": "103988747013869983347",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/galvanic-axle-343014%40appspot.gserviceaccount.com"
+    })
+    if not firebase_admin._apps:
+        def_app = firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://galvanic-axle-343014-default-rtdb.firebaseio.com'})
+    id_list = get_id_by_email(get_shared_users_for_home(cur_id))
+    if len(id_list) > 0:
+        # получаем нужный нам путь
+        x = path.split("/")
+        x = [i for i in x if i]
+        path = ""
+        for i in range(len(x) - 1):
+            path += x[i]
+        file_name = x[len(x) - 1]
+        print("FILE_NAME", file_name)
+        print("PATH", path)
+        for id in id_list:
+            ref = db.reference("User_Data/" + id + "/Shared/" + cur_id + "-folder/" + path)
+            FBList = ref.get()
+            if isinstance(FBList, list):
+                if file_name in FBList:
+                    for i in range(len(FBList)):
+                        if FBList[i] == file_name:
+                            FBList[i] = new_name
+                    print("1", FBList)
+                    ref.set(FBList)
+            elif isinstance(FBList, dict):
+                ckecker = 0
+                if file_name.endswith("-folder"):
+                    for i in list(FBList):
+                        if i == file_name:
+                            FBList[new_name] = FBList.pop(i)
+                            ckecker = 2
+
+                else:
+                    for i in list(FBList):
+                        if FBList[i] == file_name:
+                            FBList[i] = new_name
+                            ckecker = 1
+                if ckecker == 1:
+                    # перебираем ключи, чтоб всё шло по порядку
+                    int_keys = [i for i in FBList.keys() if i.isdigit()]
+                    int_keys_values = [FBList[i] for i in int_keys]
+                    for i in list(FBList):
+                        if i.isdigit():
+                            del FBList[i]
+                    new_keys = [i for i in range(len(int_keys_values))]
+                    FBList.update(dict(zip(new_keys, int_keys_values)))
+                    print("2", FBList)
+                    ref.set(FBList)
+                elif ckecker == 2:
+                    print("3", FBList)
+                    ref.set(FBList)
 
 def share_files(users_list, files_list, path_to_files):
     """ Делимся выбранными файлами с выбранными пользователями """
@@ -458,7 +523,8 @@ def share_files(users_list, files_list, path_to_files):
     cur_id = x[1]
     path = ""
     for i in range(3, len(x)):
-        path += x[i]
+        path += x[i] + "/"
+    print("PATH", path)
     #добавляем файлы в наш список
     id_list = get_id_by_email(users_list)
     for id in id_list:
@@ -473,11 +539,14 @@ def share_files(users_list, files_list, path_to_files):
                         if dict_for_set[j] == Shared_list[i]:
                             del dict_for_set[j]
             #добавляем наш список к итоговому
-            keys = [i for i in Shared_list.keys() if i.isdigit()]
+            keys = [str(i) for i in Shared_list.keys() if str(i).isdigit()]
             length = len(keys)
+            print(length)
             if length != 0:
                 keys = [i for i in range(int(keys[length-1])+1, length + len(dict_for_set))]
             else:
+                keys = ["0"]
+            if keys == []:
                 keys = ["0"]
             if isinstance(dict_for_set, dict):
                 dict_for_set = [dict_for_set[i] for i in dict_for_set]
@@ -485,13 +554,13 @@ def share_files(users_list, files_list, path_to_files):
             ref_shared.set(Shared_list)
         elif isinstance(Shared_list, list):
             for i in list(dict_for_set):
-                if i.isdigit():
+                if str(i).isdigit():
                     for j in range(len(Shared_list)):
                         if dict_for_set[i] == Shared_list[j]:
                             Shared_list.remove(dict_for_set[i])
                             break
             if len(dict_for_set) > 0:
-                keys = [i for i in dict_for_set.keys() if i.isdigit()]
+                keys = [str(i) for i in dict_for_set.keys() if str(i).isdigit()]
                 length = len(keys)
                 if length > 0:
                     keys = [i for i in range(int(keys[length - 1]) + 1, length + len(Shared_list))]
@@ -501,3 +570,30 @@ def share_files(users_list, files_list, path_to_files):
             ref_shared.set(dict_for_set)
         else:
             ref_shared.set(dict_for_set)
+        FBList = ref_shared.get()
+        if isinstance(FBList, dict):
+            not_folders = [str(i) for i in FBList.keys() if str(i).isdigit()]
+            folders = [i for i in FBList.keys() if not str(i).isdigit()]
+            for i in not_folders:
+                if FBList[i] in folders:
+                    del FBList[i]
+            ref_shared.set(FBList)
+        while path:
+            path = backer(path, id, cur_id)
+
+def backer(path, id, cur_id):
+
+    x = path.split("/")
+    x = [i for i in x if i]
+    path = ""
+    for i in range(len(x) - 1):
+        path += x[i] + "/"
+    ref_shared = db.reference("User_Data/" + id + "/Shared/" + cur_id + "-folder/" + path)
+    FBList = ref_shared.get()
+    if isinstance(FBList, dict):
+        not_folders = [str(i) for i in FBList.keys() if str(i).isdigit()]
+        folders = [i for i in FBList.keys() if not str(i).isdigit()]
+        for i in not_folders:
+            if FBList[i] in folders:
+                del FBList[i]
+        ref_shared.set(FBList)

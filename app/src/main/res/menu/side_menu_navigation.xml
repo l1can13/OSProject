@@ -5,9 +5,6 @@
         android:id="@+id/savedUsers"
         android:title="@string/savedUsers" />
     <item
-        android:id="@+id/notifications"
-        android:title="@string/notifications" />
-    <item
         android:id="@+id/trash"
         android:title="@string/trash" />
 

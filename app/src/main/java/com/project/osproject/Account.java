@@ -44,7 +44,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class Account extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigationView;
-    private LinearLayout darkMode;
     private LinearLayout sendFeedback;
     private RelativeLayout version;
     private CircleImageView avatar;
@@ -181,7 +180,6 @@ public class Account extends AppCompatActivity {
         setAvatar(profileRef);
 
         bottomNavigationView = findViewById(R.id.bottomMenu);
-        darkMode = findViewById(R.id.darkMode);
         sendFeedback = findViewById(R.id.feedback);
         version = findViewById(R.id.version);
 
