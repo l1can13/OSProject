@@ -536,6 +536,7 @@ public class Home extends AppCompatActivity {
                     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                         switch (item.getItemId()) {
                             case R.id.savedUsers:
+                                saveList();
                                 //saveList(filenamesList);
                                 startActivity(new Intent(getApplicationContext(), SavedUsers.class));
                                 overridePendingTransition(0, 0);
@@ -593,6 +594,7 @@ public class Home extends AppCompatActivity {
                                 notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
                                 return true;
                             case R.id.trash:
+                                saveList();
                                 startActivity(new Intent(getApplicationContext(), Trash.class));
                                 overridePendingTransition(0, 0);
                                 return true;
@@ -615,16 +617,19 @@ public class Home extends AppCompatActivity {
                             case R.id.homeItem:
                                 //saveList(filenamesList);
 //                                saveList();
+                                saveList();
                                 return true;
                             case R.id.generalItem:
                                 //saveList(filenamesList);
                                 //saveList();
+                                saveList();
                                 startActivity(new Intent(getApplicationContext(), General.class));
                                 overridePendingTransition(0, 0);
                                 return true;
                             case R.id.accountItem:
                                 //saveList(filenamesList);
                                 //saveList();
+                                saveList();
                                 startActivity(new Intent(getApplicationContext(), Account.class));
                                 overridePendingTransition(0, 0);
                                 return true;

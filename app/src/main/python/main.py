@@ -19,7 +19,7 @@ def Save(path, save_list):
         def_app = firebase_admin.initialize_app(cred, {'databaseURL': 'https://galvanic-axle-343014-default-rtdb.firebaseio.com'})
     print("PATH", path)
     ref = db.reference(path)
-
+    print("1", save_list)
     FBlist = ref.get()
     x = path.split("/")
     x = [i for i in x if i]
@@ -49,6 +49,7 @@ def Save(path, save_list):
         ref.set([i for i in save_list])
     else:
         ref.set([i for i in save_list])
+    #print("SAVE", save_list)
     if x[len(x)-1].endswith("-folder"):
         folder = x[len(x)-1]
         path = ""
@@ -57,12 +58,22 @@ def Save(path, save_list):
 
         ref = db.reference(path)
         FBlist = ref.get()
-        keys = [i for i in FBlist.keys() if i.isdigit()]
+        #print(FBlist)
+        if isinstance(FBlist, dict):
+            keys = [i for i in FBlist.keys() if i.isdigit()]
 
-        for i in keys:
-            if FBlist[i] == folder:
-                del FBlist[i]
+            for i in keys:
+                if FBlist[i] == folder:
+                    del FBlist[i]
 
+        elif isinstance(FBlist, list):
+            FBList_set = set()
+            for i in FBlist:
+                FBList_set.add(i)
+            FBlist = list(FBList_set)
+
+        if FBlist is None:
+            FBlist = []
         ref.set(FBlist)
 
 def loader(path):
@@ -83,7 +94,10 @@ def loader(path):
 
     FBList = db.reference(path).get()
     if isinstance(FBList, list):
-        return FBList
+        FBList_set = set()
+        for i in FBList:
+            FBList_set.add(i)
+        return list(FBList_set)
     elif isinstance(FBList, dict):
         keys = [i for i in FBList.keys() if i.isdigit()]
         load_list = []
