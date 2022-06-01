@@ -116,6 +116,10 @@ public class Home extends AppCompatActivity {
         }
     }
 
+    public void python_rename_shared_files(String path, String old_name, String new_name){
+        python.getModule("UserLoader").callAttr("rename_shared_files", fbAuth.getUid(),path + "/" + old_name, new_name);
+    }
+
     public void python_rename_folder(String path, String old_name, String new_name) {
         python.getModule("main").callAttr("folder_rename", "User_Data/" + fbAuth.getUid() + "/Current/" + path, old_name, new_name);
     }
@@ -540,58 +544,6 @@ public class Home extends AppCompatActivity {
                                 //saveList(filenamesList);
                                 startActivity(new Intent(getApplicationContext(), SavedUsers.class));
                                 overridePendingTransition(0, 0);
-                                return true;
-                            case R.id.notifications:
-                                Dialog dialog;
-
-                                final String[] items = {" Изменение общих файлов", " Обновления приложения", " Приглашение в команду"};
-                                final ArrayList itemsSelected = new ArrayList();
-
-                                AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
-                                builder.setTitle("Уведомления : ");
-                                builder.setMultiChoiceItems(items, null,
-                                        new DialogInterface.OnMultiChoiceClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int selectedItemId,
-                                                                boolean isSelected) {
-                                                if (isSelected) {
-                                                    itemsSelected.add(selectedItemId);
-                                                } else if (itemsSelected.contains(selectedItemId)) {
-
-                                                    itemsSelected.remove(Integer.valueOf(selectedItemId));
-                                                }
-                                            }
-                                        })
-                                        .setPositiveButton("Ок", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int id) {
-
-                                            }
-                                        })
-                                        .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int id) {
-
-                                            }
-                                        });
-
-                                dialog = builder.create();
-                                dialog.show();
-
-                                Intent intent = new Intent(getApplicationContext(), Home.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                                NotificationCompat.Builder notificationBuilder =
-                                        new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                                                .setAutoCancel(false)
-                                                .setWhen(System.currentTimeMillis())
-                                                .setContentText("Test text")
-                                                .setContentTitle("Test title")
-                                                .setPriority(PRIORITY_HIGH);
-
-                                createChannelIfNeeded(notificationManager);
-                                notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
                                 return true;
                             case R.id.trash:
                                 saveList();

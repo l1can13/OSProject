@@ -282,18 +282,20 @@ public class RecyclerViewHome extends RecyclerView.Adapter<RecyclerViewHome.View
                                                                 }
                                                                 if(!filenamesList.get(position).endsWith("-folder")) {
                                                                     new FileCustom(filenamesList.get(position), context, fbAuth, FilePath).renameFile(input.getText().toString() + "." + typeOfFile.reverse());
+                                                                    home.python_rename_shared_files(FilePath, filenamesList.get(position), input.getText().toString() + "." + typeOfFile);
                                                                     filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
                                                                     home.saveList();
                                                                 }
                                                                 else{
                                                                     new FileCustom(filenamesList.get(position), context, fbAuth, FilePath).renameFile(input.getText().toString() + "-" + typeOfFile.reverse());
+                                                                    home.python_rename_shared_files(FilePath, filenamesList.get(position), input.getText().toString() + "-" + typeOfFile);
                                                                     home.python_rename_folder(FilePath, filenamesList.get(position), input.getText().toString() + "-" + typeOfFile);
                                                                     filenamesList.set(position, input.getText().toString() + "-" + typeOfFile);
 
                                                                 }
 
-                                                                new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + "." + typeOfFile);
-                                                                filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
+                                                                //new FileCustom(filenamesList.get(position), context, fbAuth).renameFile(input.getText().toString() + "." + typeOfFile);
+                                                                //filenamesList.set(position, input.getText().toString() + "." + typeOfFile);
                                                                 home.saveList();
                                                             }
                                                         });

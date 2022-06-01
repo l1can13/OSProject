@@ -17,9 +17,8 @@ def Save(path, save_list):
     })
     if not firebase_admin._apps:
         def_app = firebase_admin.initialize_app(cred, {'databaseURL': 'https://galvanic-axle-343014-default-rtdb.firebaseio.com'})
-    print("PATH", path)
+
     ref = db.reference(path)
-    print("1", save_list)
     FBlist = ref.get()
     x = path.split("/")
     x = [i for i in x if i]
