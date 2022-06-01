@@ -379,8 +379,9 @@ def delete_shared_files(cur_id, path):
             ref = db.reference("User_Data/"+id+"/Shared/"+cur_id+"-folder/"+path)
             FBList = ref.get()
             if isinstance(FBList, list):
-                FBList.remove(file_name)
-                ref.set(FBList)
+                if (file_name in FBList):
+                    FBList.remove(file_name)
+                    ref.set(FBList)
             elif isinstance(FBList, dict):
                 ckecker = 0
                 if file_name.endswith("-folder"):
