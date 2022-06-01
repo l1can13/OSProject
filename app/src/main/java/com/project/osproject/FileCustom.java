@@ -184,9 +184,6 @@ public class FileCustom {
         } catch (IOException e) {
             Toast.makeText(context, "Ошибка при удалении папки", Toast.LENGTH_SHORT).show();
         }
-
-
-
     }
 
     private boolean checkIfDirectoryExists(String path) {

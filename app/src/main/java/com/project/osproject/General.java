@@ -366,7 +366,8 @@ public class General extends AppCompatActivity {
                         notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
                         return true;
                     case R.id.trash:
-                        Toast.makeText(getApplicationContext(), "trash", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(getApplicationContext(), Trash.class));
+                        overridePendingTransition(0, 0);
                         return true;
                 }
                 return false;
